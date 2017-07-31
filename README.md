@@ -19,9 +19,30 @@ In general most of the Java interactions are abstracted away and you'll be doing
 
 USAGE:
 
-I will add use instructions later.
+The WebdriverManager.cfc is the interface for creating the webdriver (which I call a browser) and optionally a service (which is not abstracted, it's a Java object). Creating a webdriver for Chrome for example would look like this:
+
+<cfset Browser = createObject('component', 'Components.WebDriverManager').createBrowser(
+	Browser='Chrome'
+) />
+
+This would create a local webdriver that runs on your machine, meaning you need to have the webdriver binaries installed on your local and you need to point the application at them.
+
+Alternatively you could do this:
+
+<cfset Browser = createObject('component', 'Components.WebDriverManager').createBrowser(
+	Browser='Chrome',
+	Remote=true,
+	RemoteServerAddress='http://localhost:9515',
+) />
+
+Which means you tell the webdriver to execute in remote mode but you point it at your local. In this way you can put your webdriver binaries whereever you want but you need to manually start and close them. For true remote mode you'd point RemoteServerAddress at the actual machine running the standalone Selenium server.
+
+The actual magic of grabbing and interacting with a page happens inside Browser.cfc where you can utilize the methods getElementBy(), getElement() and getElements(). The latter two offer the most control over how to target elements, whereas getElementBy() is a shorthand interface for a single grabbing element, utilizing methods such as getElementBy().class(), getElementBy().id() and getElementBy().textContent().
 
 NOTES/TROUBLESHOOTING:
 
 There are a few hardcoded things in the code that I still have to remove or redo for this public version such as:
+
 WebdriverManager.cfc has references to an application mapping called "DriverBins", which is the folder where you keep your webdriver binaries.
+
+A lot of the object creations rely on our application mappings (all of the CFCs from this project live in a subfolder called Components for example). They need to be removed.
