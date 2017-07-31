@@ -20,3 +20,8 @@ In general most of the Java interactions are abstracted away and you'll be doing
 USAGE:
 
 I will add use instructions later.
+
+NOTES/TROUBLESHOOTING:
+
+There are a few hardcoded things in the code that I still have to remove or redo for this public version such as:
+WebdriverManager.cfc has references to an application mapping called "DriverBins", which is the folder where you keep your webdriver binaries.
