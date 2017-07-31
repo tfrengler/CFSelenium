@@ -35,13 +35,27 @@ Alternatively you could do this:
 ```
 Which means you tell the webdriver to execute in remote mode but you point it at your local. In this way you can put your webdriver binaries whereever you want but you need to manually start and close them. For true remote mode you'd point RemoteServerAddress at the actual machine running the standalone Selenium server.
 
-The actual magic of grabbing and interacting with a page happens inside Browser.cfc where you can utilize the methods getElementBy(), getElement() and getElements(). The latter two offer the most control over how to target elements, whereas getElementBy() is a shorthand interface for a single grabbing element, utilizing methods such as getElementBy().class(), getElementBy().id() and getElementBy().textContent().
-
+The actual magic of grabbing and interacting with a page happens inside Browser.cfc where you can utilize the methods:
+```
+getElementBy()
+getElement()
+getElements()
+```
+The latter two offer the most control over how to target elements, whereas getElementBy() is a shorthand interface for a single grabbing element, utilizing methods such as:
+```
+getElementBy().class()
+getElementBy().id()
+getElementBy().textContent().
+```
 <b>NOTES/TROUBLESHOOTING:</b>
 
 There are a few hardcoded things in the code that I still have to remove or redo for this public version such as:
 <ol>
-<li>WebdriverManager.cfc has references to an application mapping called "DriverBins", which is the folder where you keep your webdriver binaries.</li>
+<li><b>FIXED:</b> WebdriverManager.cfc has references to an application mapping called "DriverBins", which is the folder where you keep your webdriver binaries.<br/>
+<b>I made the previously optional argument where you can pass a path to the webdriver bins required so that it will no longer require (or be able) to rely on application mappings</b>
+</li>
 
-<li>A lot of the object creations rely on our application mappings (all of the CFCs from this project live in a subfolder called Components for example). They need to be removed.</li>
+<li><b>FIXED:</b> A lot of the object creations rely on our application mappings (all of the CFCs from this project live in a subfolder called Components for example).<br/> 
+<b>They need to be removed.</b>
+</li>
 </ol>
