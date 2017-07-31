@@ -17,11 +17,13 @@ Don't come expecting a fully fledged framework that will suit all your needs and
 
 In general most of the Java interactions are abstracted away and you'll be doing all your calls to Coldfusion objects and code. Although most Java objects are wrapped I have made public methods that can get you the original Java object so that you'll still be able to access all the original Selenium functions directly. I have only wrapped the most commonly used (for my company anyway) Selenium methods and functions, which are then exposed via CF methods.
 
-The framework as I present it here it also completely stand-alone. This means I built no support in for reporters, testrunners, or any kind of known (or unknown) test harnesses or frameworks of any kind. You'd have to build that into it yourself.
+The framework as I present it here it also completely stand-alone. This means I built no support in for reporters, testrunners, or any kind of known (or unknown) test harnesses or frameworks of any kind. You'd have to build that kind of hook yourself.
+
+There's a copious amount of checking and error handling because that's one of my personal bugbears. Also the framework is liberal about using <cfthrow> when it hits conditions that are considered bad.
 
 <b>USAGE:</b>
 
-<u>Setting up</u>
+<b>Setting up</b>
 
 The WebdriverManager.cfc is the interface for creating the webdriver (which I call a browser) and optionally a service (which is not abstracted, it's a Java object). Creating a webdriver for Chrome for example would look like this:
 ```
@@ -39,7 +41,7 @@ Alternatively you could do this:
 ```
 Which means you tell the webdriver to execute in remote mode but you point it at your local. In this way you can put your webdriver binaries whereever you want but you need to manually start and close them. For true remote mode you'd point RemoteServerAddress at the actual machine running the standalone Selenium server.
 
-<u>Navigating and interacting elements</u>
+<b>Navigating pages and interacting with elements</b>
 
 The actual magic of grabbing and interacting with a page happens inside Browser.cfc where you can utilize the methods:
 ```
@@ -65,6 +67,8 @@ or clicking on the element (using getElementBy instead)
 ```
 <cfset Browser.getElementBy().name(name="username").click() />
 ```
+Note that the methods that target single elements will be throwing errors if it can't find any elements matching your criteria. If you want to check for existence then use getElements() instead!
+
 As mentioned earlier not every single thing is exposed via CFML but you can grab the Java-object instead. Here we maximize the browser window:
 ```
 <cfset Browser.getJavaWebDriver().manage().window().maximize() />
