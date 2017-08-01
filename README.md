@@ -86,3 +86,7 @@ There are a few hardcoded things in the code that I still have to remove or redo
 <b>All the mapping associations have been removed.</b>
 </li>
 </ol>
+
+<b>CONTACT AND FEEDBACK:</b>
+
+I'm always open for comments or feedback, as long as it's constructive. You can reach me at tfrengler@talentsoft.com
