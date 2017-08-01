@@ -4,7 +4,7 @@
 	<cfset oJavaWebElement = createObject("java", "java.lang.Object") />
 	<cfset oSelectInterface = "" />
 
-	<cffunction name="init" returntype="Components.Element" access="public" hint="Constructor" >
+	<cffunction name="init" returntype="Element" access="public" hint="Constructor" >
 		<cfargument name="WebElementReference" type="any" required="true" />
 
 		<cfset var oSelectInterface = "" />
@@ -12,7 +12,7 @@
 		<cfset setJavaWebElement( WebElementReference=arguments.WebElementReference ) />
 
 		<cfif isSelectTag() >
-			<cfset oSelectInterface = createObject("component", "Components.SelectElement").init( WebElementReference=arguments.WebElementReference ) />
+			<cfset oSelectInterface = createObject("component", "SelectElement").init( WebElementReference=arguments.WebElementReference ) />
 			<cfset setSelectInterface( SelectInterfaceReference=oSelectInterface ) />
 		</cfif>
 
@@ -37,7 +37,7 @@
 	</cffunction>
 
 	<cffunction name="setSelectInterface" returntype="void" access="private" hint="" >
-		<cfargument name="SelectInterfaceReference" type="Components.SelectElement" required="true" />
+		<cfargument name="SelectInterfaceReference" type="SelectElement" required="true" />
 
 		<cfset oSelectInterface = arguments.SelectInterfaceReference />
 	</cffunction>
@@ -156,7 +156,7 @@
 		</cftry>
 	</cffunction>
 
-	<cffunction name="select" returntype="Components.SelectElement" access="public" hint="Returns a reference to the interface used for interacting with the special functions of a select-tag. If this element is not a select-tag then an error will be thrown" >
+	<cffunction name="select" returntype="SelectElement" access="public" hint="Returns a reference to the interface used for interacting with the special functions of a select-tag. If this element is not a select-tag then an error will be thrown" >
 
 		<cfif isSelectTag() IS false >
 			<cfthrow message="Error getting select-tag interface" detail="You can't use select-methods on this element because it's not a select-tag. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />

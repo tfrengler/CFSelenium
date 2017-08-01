@@ -7,7 +7,7 @@
 	<cfset bFetchHiddenElements = false />
 	<cfset bUseSeleniumImplicitWait = false />
 
-	<cffunction name="init" returntype="Components.Browser" access="public" hint="Constructor" >
+	<cffunction name="init" returntype="Browser" access="public" hint="Constructor" >
 		<cfargument name="WebDriverReference" type="any" required="true" hint="" />
 		<cfargument name="WaitForDOMReadyStateTimeOut" type="numeric" required="false" default="30" />
 
@@ -19,7 +19,7 @@
 		</cfif>
 
 		<cfset setElementLocator( 
-			Data=createObject("component", "Components.ElementLocator")
+			Data=createObject("component", "ElementLocator")
 				.init(BrowserReference=this) 
 			) 
 		/>
@@ -68,7 +68,7 @@
 	</cffunction>
 
 	<cffunction name="setElementLocator" returntype="void" access="private" >
-		<cfargument name="Data" type="Components.ElementLocator" required="yes" />
+		<cfargument name="Data" type="ElementLocator" required="yes" />
 
 		<cfset oElementLocator = arguments.Data />
 	</cffunction>
@@ -93,7 +93,7 @@
 		<cfreturn nWaitForDOMReadyStateTimeOut />
 	</cffunction>
 
-	<cffunction name="getElementBy" returntype="Components.ElementLocator" access="public" hint="Returns an interface that contains shorthand methods designed to quickly grab an element by specific, commonly used attributes such as id, class, title, name etc. If you want to do something more advanced - or just prefer more control - use getElement() or getElements() instead." >
+	<cffunction name="getElementBy" returntype="ElementLocator" access="public" hint="Returns an interface that contains shorthand methods designed to quickly grab an element by specific, commonly used attributes such as id, class, title, name etc. If you want to do something more advanced - or just prefer more control - use getElement() or getElements() instead." >
 		<cfreturn oElementLocator />
 	</cffunction>
 
@@ -112,7 +112,7 @@
 			<cfthrow message="No element found that matches your criteria. SearchFor: #arguments.SearchFor# | LocateUsing: #arrayToList(arguments.LocateUsing)#" />
 		</cfif>
 
-		<cfif isInstanceOf(aElementCollection[1], "Components.Element") IS false >
+		<cfif isInstanceOf(aElementCollection[1], "Element") IS false >
 			<cfthrow message="The first array entry returned from fetchHTMLElements() is not of type 'org.openqa.selenium.remote.RemoteWebElement'.
 			Your search criteria were: LocateUsing: #arrayToList(arguments.LocateUsing)# | SearchFor: #arguments.SearchFor#" />
 		</cfif>
@@ -235,12 +235,12 @@
 					<cfif arguments.LocateHiddenElements IS false >
 
 						<cfif oCurrentWebElement.isDisplayed() >	
-							<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oCurrentWebElement ) />
+							<cfset oElement = createObject("component", "Element").init( WebElementReference=oCurrentWebElement ) />
 							<cfset arrayAppend(aReturnData, oElement) />
 						</cfif>
 
 					<cfelse>
-						<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oCurrentWebElement ) />
+						<cfset oElement = createObject("component", "Element").init( WebElementReference=oCurrentWebElement ) />
 						<cfset arrayAppend(aReturnData, oElement) />
 					</cfif>
 

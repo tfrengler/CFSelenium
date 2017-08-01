@@ -6,17 +6,17 @@
 	<cfset oBrowser = "" />
 
 	<cffunction name="setBrowser" returntype="void" access="private" >
-		<cfargument name="Data" type="Components.Browser" required="yes" />
+		<cfargument name="Data" type="Browser" required="yes" />
 
 		<cfset oBrowser = arguments.Data />
 	</cffunction>
 
-	<cffunction name="getBrowser" returntype="Components.Browser" access="private" >
+	<cffunction name="getBrowser" returntype="Browser" access="private" >
 		<cfreturn oBrowser />
 	</cffunction>
 
-	<cffunction name="init" returntype="Components.ElementLocator" access="public" hint="Constructor" >
-		<cfargument name="BrowserReference" type="Components.Browser" required="true" />
+	<cffunction name="init" returntype="ElementLocator" access="public" hint="Constructor" >
+		<cfargument name="BrowserReference" type="Browser" required="true" />
 
 		<cfset setBrowser(Data=arguments.BrowserReference) />
 
@@ -25,7 +25,7 @@
 
 	<!--- PUBLIC METHODS --->
 
-	<cffunction name="title" returntype="Components.Element" access="public" hint="Search for and retrieve a single element based on its title-attribute." >
+	<cffunction name="title" returntype="Element" access="public" hint="Search for and retrieve a single element based on its title-attribute." >
 		<cfargument name="Title" type="string" required="yes" hint="The title of the element you want to search for." />
 		<cfargument name="OnlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain title, rather than any element." />
 
@@ -44,7 +44,7 @@
 		<cfreturn aReturnData />
 	</cffunction>
 
-	<cffunction name="id" returntype="Components.Element" access="public" hint="Search for and retrieve a single element based on its id-attribute." >
+	<cffunction name="id" returntype="Element" access="public" hint="Search for and retrieve a single element based on its id-attribute." >
 		<cfargument name="Id" type="string" required="yes" hint="The id of the element you want to search for." />
 		<cfargument name="OnlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain id, rather than any element." />
 
@@ -63,7 +63,7 @@
 		<cfreturn aReturnData />
 	</cffunction>
 
-	<cffunction name="class" returntype="Components.Element" access="public" hint="Search for and retrieve a single element based on its className-attribute." >
+	<cffunction name="class" returntype="Element" access="public" hint="Search for and retrieve a single element based on its className-attribute." >
 		<cfargument name="ClassName" type="string" required="yes" hint="The class name or names you want to search for. You can search for both single and multiple classes, separated by spaces." />
 		<cfargument name="OnlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain class name (or names), rather than any element." />
 
@@ -93,7 +93,7 @@
 		<cfreturn aReturnData />
 	</cffunction>
 
-	<cffunction name="name" returntype="Components.Element" access="public" hint="Search for and retrieve a single element based on its name-attribute." >
+	<cffunction name="name" returntype="Element" access="public" hint="Search for and retrieve a single element based on its name-attribute." >
 		<cfargument name="Name" type="string" required="yes" hint="The name of the element you want to search for." />
 		<cfargument name="OnlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain name, rather than any element." />
 
@@ -113,7 +113,7 @@
 	</cffunction>
 
 	<!--- http://stackoverflow.com/questions/38240763/xpath-difference-between-dot-and-text --->
-	<cffunction name="textEquals" returntype="Components.Element" access="public" hint="Search for and retrieve a single input element based on the text content being the exact value you search for." >
+	<cffunction name="textEquals" returntype="Element" access="public" hint="Search for and retrieve a single input element based on the text content being the exact value you search for." >
 		<cfargument name="Text" type="string" required="yes" hint="The text content of the element you want to search for. Only an element whose content is EXACTLY what you pass which be retrieved."  />
 		<cfargument name="OnlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with certain text content, rather than any element." />
 
@@ -133,7 +133,7 @@
 	</cffunction>
 
 	<!--- http://stackoverflow.com/questions/3655549/xpath-containstext-some-string-doesnt-work-when-used-with-node-with-more --->
-	<cffunction name="textContains" returntype="Components.Element" access="public" hint="Search for and retrieve a single input element based on the text content containing the value you search for." >
+	<cffunction name="textContains" returntype="Element" access="public" hint="Search for and retrieve a single input element based on the text content containing the value you search for." >
 		<cfargument name="Text" type="string" required="yes" hint="The text content of the element you want to search for. An element whose content contains what you pass which be retrieved. Great for partial searches." />
 		<cfargument name="OnlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with certain text content, rather than any element." />
 
@@ -152,7 +152,7 @@
 		<cfreturn aReturnData />
 	</cffunction>
 
-	<cffunction name="inputType" returntype="Components.Element" access="public" hint="Search for and retrieve a single input element based on its type-attribute." >
+	<cffunction name="inputType" returntype="Element" access="public" hint="Search for and retrieve a single input element based on its type-attribute." >
 		<cfargument name="Type" type="string" required="yes" hint="The type of input element you want to search for." />
 
 		<cfset var aReturnData = arrayNew(1) />
@@ -165,7 +165,7 @@
 		<cfreturn aReturnData />
 	</cffunction>
 
-	<cffunction name="value" returntype="Components.Element" access="public" hint="Search for and retrieve a single element based on its value-attribute." >
+	<cffunction name="value" returntype="Element" access="public" hint="Search for and retrieve a single element based on its value-attribute." >
 		<cfargument name="Value" type="string" required="yes" hint="The value of the element you want to search for." />
 		<cfargument name="OnlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain value, rather than any element." />
 

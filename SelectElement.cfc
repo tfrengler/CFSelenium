@@ -3,7 +3,7 @@
 
 	<cfset oJavaSelectInterface = createObject("java", "java.lang.Object") />
 
-	<cffunction name="init" returntype="Components.SelectElement" access="public" hint="Constructor" >
+	<cffunction name="init" returntype="SelectElement" access="public" hint="Constructor" >
 		<cfargument name="WebElementReference" type="any" required="true" />
 
 		<cfset var oJavaSelectInterface = createObject("java", "java.lang.Object") />
@@ -56,7 +56,7 @@
 		<cfif arrayLen(aListOfOptionsAsJavaObjects) GT 0 >
 			<cfloop array="#aListOfOptionsAsJavaObjects#" index="oCurrentWebElement" >
 
-				<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oCurrentWebElement ) />
+				<cfset oElement = createObject("component", "Element").init( WebElementReference=oCurrentWebElement ) />
 				<cfset arrayAppend(aListOfOptionsAsCFObjects, oElement) />
 
 			</cfloop>
@@ -75,7 +75,7 @@
 		<cfif arrayLen(aListOfOptionsAsJavaObjects) GT 0 >
 			<cfloop array="#aListOfOptionsAsJavaObjects#" index="oCurrentWebElement" >
 
-				<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oCurrentWebElement ) />
+				<cfset oElement = createObject("component", "Element").init( WebElementReference=oCurrentWebElement ) />
 				<cfset arrayAppend(aListOfOptionsAsCFObjects, oElement) />
 
 			</cfloop>
@@ -84,7 +84,7 @@
 		<cfreturn aListOfOptionsAsCFObjects />
 	</cffunction>
 
-	<cffunction name="getFirstSelectedOption" returntype="Components.Element" access="public" hint="Returns the first selected option in this select tag (or the currently selected option in a normal select)" >
+	<cffunction name="getFirstSelectedOption" returntype="Element" access="public" hint="Returns the first selected option in this select tag (or the currently selected option in a normal select)" >
 	
 		<cfset var oElement = "" />
 		<cfset var oJavaElement = "" />
@@ -97,7 +97,7 @@
 			</cfcatch>
 		</cftry>
 
-		<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oJavaElement ) />
+		<cfset oElement = createObject("component", "Element").init( WebElementReference=oJavaElement ) />
 
 		<cfreturn oElement />	
 	</cffunction>
