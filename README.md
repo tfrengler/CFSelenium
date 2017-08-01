@@ -33,10 +33,10 @@ This would create a local webdriver that runs on your machine, meaning you need 
 
 Alternatively you could do this:
 ```
-<cfset Browser = createObject('component', 'WebDriverManager').createBrowser(<br/>
-	Browser='Chrome',<br/>
-	Remote=true,<br/>
-	RemoteServerAddress='http://localhost:9515',<br/>
+<cfset Browser = createObject('component', 'WebDriverManager').createBrowser(
+	Browser='Chrome',
+	Remote=true,
+	RemoteServerAddress='http://localhost:9515',
 ) />
 ```
 Which means you tell the webdriver to execute in remote mode but you point it at your local. In this way you can put your webdriver binaries whereever you want but you need to manually start and close them. For true remote mode you'd point RemoteServerAddress at the actual machine running the standalone Selenium server.
