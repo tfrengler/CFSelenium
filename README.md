@@ -63,7 +63,7 @@ Example of using the webdriver to navigate:
 ```
 Example of grabbing an textarea or input-text element and writing in it (using getElement):
 ```
-<cfset Browser.getElement(SearchFor="username").write( Text=["test"] ) />
+<cfset Browser.getElement(SearchFor="username",LocateUsing=["name"]).write( Text=["test"] ) />
 ```
 or clicking on the element (using getElementBy instead)
 ```
