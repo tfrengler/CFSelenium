@@ -7,19 +7,19 @@
 	<cfset bFetchHiddenElements = false />
 	<cfset bUseSeleniumImplicitWait = false />
 
-	<cffunction name="init" returntype="Browser" access="public" hint="Constructor" >
+	<cffunction name="init" returntype="Components.Browser" access="public" hint="Constructor" >
 		<cfargument name="WebDriverReference" type="any" required="true" hint="" />
 		<cfargument name="WaitForDOMReadyStateTimeOut" type="numeric" required="false" default="30" />
 
 		<cfif isObject(arguments.WebDriverReference) IS false >
-			<cfthrow message="Argument 'WebDriverReference' is not an object" />
+			<cfthrow message="Error when initializing Browser" detail="Argument 'WebDriverReference' is not an object" />
 		</cfif>
 		<cfif isInstanceOf(arguments.WebDriverReference, "org.openqa.selenium.remote.RemoteWebDriver") IS false >
-			<cfthrow message="Argument 'WebDriverReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebDriver'" />
+			<cfthrow message="Error when initializing Browser" detail="Argument 'WebDriverReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebDriver'" />
 		</cfif>
 
 		<cfset setElementLocator( 
-			Data=createObject("component", "ElementLocator")
+			Data=createObject("component", "Components.ElementLocator")
 				.init(BrowserReference=this) 
 			) 
 		/>
@@ -32,26 +32,27 @@
 
 	<cffunction name="useSeleniumImplicitWait" returntype="void" access="public" hint="Use this method to enable or disable Selenium's mechanism for waiting for the DOM elements to be ready. By default our own custom wait mechanism will be used when fetching elements." >
 		<cfargument name="Enable" type="boolean" required="yes" hint="Enables or disables Selenium's own built in wait mechanism." />
-		<cfargument name="Timeout" type="number" required="false" default=0 hint="The timeout in seconds to wait for the DOM to be ready. Only relevant if you enable this functionality. If you disable it then the implicitlyWait timeout will be to 0 which is default." />
+		<cfargument name="Timeout" type="numeric" required="false" default=0 hint="The timeout in seconds to wait for the DOM to be ready. Only relevant if you enable this functionality. If you disable it then the implicitlyWait timeout will be to 0 which is default." />
 
-			<cfset var ImplicitTimeout = arguments.Timeout />
+			<cfset var nImplicitTimeout = arguments.Timeout />
 
 			<cfif isValid("integer", arguments.Timeout) IS false >
-				<cfthrow message="Argument 'Timeout' must be a valid integer!" />
+				<cfthrow message="Error when setting implicit wait" detail="Argument 'Timeout' must be a valid integer!" />
 				<cfif arguments.Timeout LT 0 >
-					<cfthrow message="Argument 'Timeout' must be greater than 0!" />
+					<cfthrow message="Error when setting implicit wait" detail="Argument 'Timeout' must be greater than 0!" />
 				</cfif>
 			</cfif>
 
 			<cfif arguments.Enable IS true >
 				<cfset bUseSeleniumImplicitWait = true />
-				<cfset ImplicitTimeout = arguments.Timeout />
+				<cfset nImplicitTimeout = arguments.Timeout />
 			<cfelseif arguments.Enable IS false >
 				<cfset bUseSeleniumImplicitWait = false />
+				<cfset nImplicitTimeout = 0 />
 			</cfif>
 
 			<cfset getJavaWebDriver().manage().timeouts().implicitlyWait(
-				javaCast("long", ImplicitTimeout),
+				javaCast("long", nImplicitTimeout),
 				createObject("java", "java.util.concurrent.TimeUnit").SECONDS
 			) />
 	</cffunction>
@@ -63,12 +64,11 @@
 	</cffunction>
 
 	<cffunction name="getFetchHiddenElements" returntype="boolean" access="private" >
-
 		<cfreturn bFetchHiddenElements />
 	</cffunction>
 
 	<cffunction name="setElementLocator" returntype="void" access="private" >
-		<cfargument name="Data" type="ElementLocator" required="yes" />
+		<cfargument name="Data" type="Components.ElementLocator" required="yes" />
 
 		<cfset oElementLocator = arguments.Data />
 	</cffunction>
@@ -93,11 +93,11 @@
 		<cfreturn nWaitForDOMReadyStateTimeOut />
 	</cffunction>
 
-	<cffunction name="getElementBy" returntype="ElementLocator" access="public" hint="Returns an interface that contains shorthand methods designed to quickly grab an element by specific, commonly used attributes such as id, class, title, name etc. If you want to do something more advanced - or just prefer more control - use getElement() or getElements() instead." >
+	<cffunction name="getElementBy" returntype="Components.ElementLocator" access="public" hint="Returns an interface that contains shorthand methods designed to quickly grab an element by specific, commonly used attributes such as id, class, title, name etc. If you want to do something more advanced - or just prefer more control - use getElement() or getElements() instead." >
 		<cfreturn oElementLocator />
 	</cffunction>
 
-	<cffunction name="getElement" returntype="any" access="public" hint="Returns the FIRST element that matches your search criteria. Even if you give it a criteria that matches multiple elements this method will only return the first one it finds and will throw an error if NO elements are found" >
+	<cffunction name="getElement" returntype="Components.Element" access="public" hint="Returns the FIRST element that matches your search criteria. Even if you give it a criteria that matches multiple elements this method will only return the first one it finds and will throw an error if NO elements are found" >
 		<cfargument name="SearchFor" type="string" required="true" hint="The search string to locate the element by. Can be an id, tag-name, class name, xpath, css selector etc" />
 		<cfargument name="LocateUsing" type="array" required="false" default="#arrayNew(1)#" hint="The name(s) of the Selenium locator mechanisms to use. Use this to force using specific mechanism(s). If not passed then it will loop through them in sequence. Valid locators: id,cssSelector,xpath,name,className,linkText,partialLinkText,tagName" />
 		<cfargument name="LocateHiddenElements" type="boolean" required="false" default="#getFetchHiddenElements()#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
@@ -109,11 +109,11 @@
 		) />
 
 		<cfif arrayIsEmpty(aElementCollection) >
-			<cfthrow message="No element found that matches your criteria. SearchFor: #arguments.SearchFor# | LocateUsing: #arrayToList(arguments.LocateUsing)#" />
+			<cfthrow message="Error fetching HTML element" detail="No element found that matches your criteria. SearchFor: #arguments.SearchFor# | LocateUsing: #arrayToList(arguments.LocateUsing)#" />
 		</cfif>
 
-		<cfif isInstanceOf(aElementCollection[1], "Element") IS false >
-			<cfthrow message="The first array entry returned from fetchHTMLElements() is not of type 'org.openqa.selenium.remote.RemoteWebElement'.
+		<cfif isInstanceOf(aElementCollection[1], "Components.Element") IS false >
+			<cfthrow message="Error fetching HTML element" detail="The first array entry returned from fetchHTMLElements() is not of type 'org.openqa.selenium.remote.RemoteWebElement'.
 			Your search criteria were: LocateUsing: #arrayToList(arguments.LocateUsing)# | SearchFor: #arguments.SearchFor#" />
 		</cfif>
 
@@ -166,7 +166,7 @@
 
 			<cfloop array="#arguments.LocateUsing#" index="sCurrentArgumentLocator" >
 				<cfif sCurrentArgumentLocator IS NOT "javascript" AND ArrayContains(aValidSeleniumLocators, sCurrentArgumentLocator) IS false >
-					<cfthrow message="Your list of locators passed in argument 'LocateUsing' contains an invalid Selenium locator: #sCurrentArgumentLocator#. Valid locators are: #arrayToList(aValidSeleniumLocators)#" />
+					<cfthrow message="Error fetching HTML element" detail="Your list of locators passed in argument 'LocateUsing' contains an invalid Selenium locator: #sCurrentArgumentLocator#. Valid locators are: #arrayToList(aValidSeleniumLocators)#" />
 				</cfif>
 			</cfloop>
 
@@ -182,7 +182,7 @@
 			<cfif sCurrentArgumentLocator IS "javascript" >
 
 				<cfset ReturnDataFromScript = runJavascript(
-					Script=arguments.SearchFor,
+					Script="return #arguments.SearchFor#",
 					Parameters=arguments.JavascriptArguments,
 					Asynchronous=false
 				) />
@@ -235,12 +235,12 @@
 					<cfif arguments.LocateHiddenElements IS false >
 
 						<cfif oCurrentWebElement.isDisplayed() >	
-							<cfset oElement = createObject("component", "Element").init( WebElementReference=oCurrentWebElement ) />
+							<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oCurrentWebElement ) />
 							<cfset arrayAppend(aReturnData, oElement) />
 						</cfif>
 
 					<cfelse>
-						<cfset oElement = createObject("component", "Element").init( WebElementReference=oCurrentWebElement ) />
+						<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oCurrentWebElement ) />
 						<cfset arrayAppend(aReturnData, oElement) />
 					</cfif>
 
@@ -255,7 +255,7 @@
 	<cffunction name="waitForDocumentToBeReady" returntype="void" access="public" hint="This method is used internally to wait for the document to be ready. It checks both the DOM (using the native document.readyState property) and for AJAX calls made with jQuery (checking jQuery.active). It recursively calls itself until the document is ready or until the timeout is reached." >
 		<cfargument name="TickCountStart" type="numeric" required="false" default="#getTickCount()#" />
 
-		<cfset sleep(1000) />
+		<cfset sleep(100) />
 
 		<cfset var nCurrentTickCount = getTickCount() />
 		<cfset var bDocumentReadyState = false />
@@ -263,12 +263,13 @@
 		<cfset var sDocumentReadyScript = "" />
 		<cfset var sJQueryReadyScript = "" />
 		<cfset var nTimeDifference = 0 />
+		<cfset var aJavascriptArguments = javaCast("java.lang.Object[]", arrayNew(1)) />
 		<cfset var nTimeOut = getWaitForDOMReadyStateTimeOut() /> <!--- Be aware that it is not completely accurate. The function's execution time plus the sleep(1000) adds a bit of overhead --->
 
 		<cfset nTimeDifference = numberFormat(nCurrentTickCount/1000,'999') - numberFormat(arguments.TickCountStart/1000,'999') />
 
 		<cfif nTimeDifference GT nTimeOut >
-			<cfthrow message="WaitForDocumentToBeReady() hit the timeout before the DOM was ready. Timeout is: <b>#nTimeOut#</b>" />
+			<cfthrow message="Error while waiting for DOM to get ready" detail="WaitForDocumentToBeReady() hit the timeout before the DOM was ready. Timeout is: #nTimeOut#" />
 			<cfreturn />
 		</cfif>
 
@@ -295,15 +296,17 @@
 				return false;
 			};
 		</cfsavecontent>
-
-		<cfset bDocumentReadyState = runJavascript(
-			Script=sDocumentReadyScript
+		
+		<cfset bDocumentReadyState = getJavaWebDriver().executeScript(
+			sDocumentReadyScript,
+			aJavascriptArguments
 		) />
-		<cfset bJQueryReadyState = runJavascript(
-			Script=sJQueryReadyScript
+		<cfset bJQueryReadyState = getJavaWebDriver().executeScript(
+			sJQueryReadyScript,
+			aJavascriptArguments
 		) />
 
-		<cfif bDocumentReadyState IS true && bJQueryReadyState IS true >
+		<cfif bDocumentReadyState IS true AND bJQueryReadyState IS true >
 			<!--- End recursion, resume whatever else comes after the call to this function --->
 			<cfreturn />
 		<cfelse>
@@ -325,11 +328,19 @@
 		<cfset getJavaWebDriver().get( arguments.URL ) />
 	</cffunction>
 
+	<cffunction name="quit" returntype="void" access="public" hint="Quits this driver, closing every associated window." >
+		<cfreturn getJavaWebDriver().quit() />
+	</cffunction>
+
+	<cffunction name="close" returntype="void" access="public" hint="Close the current window, quitting the browser if it's the last window currently open." >
+		<cfreturn getJavaWebDriver().close() />
+	</cffunction>
+
 	<cffunction name="runJavascript" returntype="any" access="public" hint="The script fragment provided will be executed as the body of an anonymous function. Note that local variables will not be available once the script has finished executing, though global variables will persist. If the script returns something Selenium will attempt to convert them. If the script returns nothing or the value is null, then it returns null which makes the variable containing the response undefined." >
 		<cfargument name="Script" type="string" required="true" hint="The javascript as a string. Be careful to escape quotes or it will break" />
 		<cfargument name="Parameters" type="array" required="false" default="#arrayNew(1)#" hint="Script arguments must be a number, a boolean, a string, WebElement, or an array of any of those combinations. The arguments will be made available to the JavaScript via the 'arguments' variable." />
 		<cfargument name="Asynchronous" type="boolean" required="false" default="false" hint="Unlike executing synchronous JavaScript, scripts executed with this method must explicitly signal they are finished by invoking the provided callback. This callback is always injected into the executed function as the last argument." />
-
+		
 		<cfset var ReturnDataFromScript = "" />
 
 		<cfset var aJavascriptArguments = javaCast(
@@ -337,12 +348,7 @@
 			arguments.Parameters
 		) />
 
- 		<cfif arrayLen(arguments.Parameters) GT 0 >
- 			<cfset aJavascriptArguments = javaCast(
-				"java.lang.Object[]",
-				arguments.Parameters
-			) />		
- 		</cfif>
+		<cfset waitForDocumentToBeReady() />
 
  		<cfif arguments.Asynchronous >
 			<cfset ReturnDataFromScript = getJavaWebDriver().executeAsyncScript(
@@ -356,7 +362,9 @@
 			) />
 		</cfif>
 
-		<!--- 	If executeScript() does not return something that can be converted then ReturnDataFromScript becomes 'undefined'. Otherwise Selenium converts the results thus:
+		<!--- 	
+			If executeScript() does not return something that can be converted then ReturnDataFromScript becomes 'undefined'. 
+			Otherwise Selenium converts the results thus:
 			
 			For an HTML element, returns a WebElement
 			For a decimal, a Double is returned
@@ -365,8 +373,14 @@
 			For all other cases, a String is returned.
 			For an array, return a List<Object> with each object following the rules above.
 			
-			Since executeScript() can potentially return so many different datatypes we return null in case nothing is returned so the caller can react accordingly
+			Since executeScript() can potentially return so many different datatypes we return null in case nothing is 
+			returned so the caller can react accordingly.
+
+			If an element isn't returned from this method, and you try to call methods on the result, you'll like get an 
+			error along the lines of this: "Value must be initialized before use. Its possible that a method called on a 
+			Java object created by CreateObject returned null."
 		--->
+		
 		<cfif isDefined("ReturnDataFromScript") >
 			<cfreturn ReturnDataFromScript />
 		<cfelse>
@@ -375,23 +389,23 @@
 	</cffunction>
 
 	<cffunction name="takeScreenshot" returntype="any" access="public" hint="Capture a screenshot of the window currently in focus as PNG." >
-		<cfargument name="Format" type="string" required="false" default="bytes" hint="The format you want the screenshot returned as. Can return either base64, raw bytes or a java.io.File-object." />
+		<cfargument name="Format" type="string" required="false" default="bytes" hint="The format you want the screenshot returned as. Can return either base64, raw bytes or a java.io.File-object. Valid parameter strings are: 'bytes', 'base64' or 'file'." />
 
  		<cfset var sValidFormats = "bytes,base64,file" />
  		<cfset var oOutputType = createObject("java", "org.openqa.selenium.OutputType") />
  		<cfset var Type = "" />
- 		<cfset var Screenshot = "" />
+ 		<cfset var xScreenshot = "" />
 
  		<cfif listFindNoCase(sValidFormats, arguments.Format) GT 0 >
 
 			<cfset Type = oOutputType[ uCase(arguments.Format) ] />
-			<cfset Screenshot = getJavaWebDriver().getScreenshotAs(Type) />
+			<cfset xScreenshot = getJavaWebDriver().getScreenshotAs(Type) />
 
 		<cfelse>
-			<cfthrow message="Argument 'Format' that you passed as '#arguments.Format#' is not a valid format type. Valid formats are: #sValidFormats#" />	
+			<cfthrow message="Error taking screenshot" detail="Argument 'Format' that you passed as '#arguments.Format#' is not a valid format type. Valid formats are: #sValidFormats#" />	
 		</cfif>
 
-		<cfreturn Screenshot />
+		<cfreturn xScreenshot />
 	</cffunction>
 
 </cfcomponent>

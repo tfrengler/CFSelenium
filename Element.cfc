@@ -4,7 +4,7 @@
 	<cfset oJavaWebElement = createObject("java", "java.lang.Object") />
 	<cfset oSelectInterface = "" />
 
-	<cffunction name="init" returntype="Element" access="public" hint="Constructor" >
+	<cffunction name="init" returntype="Components.Element" access="public" hint="Constructor" >
 		<cfargument name="WebElementReference" type="any" required="true" />
 
 		<cfset var oSelectInterface = "" />
@@ -12,7 +12,7 @@
 		<cfset setJavaWebElement( WebElementReference=arguments.WebElementReference ) />
 
 		<cfif isSelectTag() >
-			<cfset oSelectInterface = createObject("component", "SelectElement").init( WebElementReference=arguments.WebElementReference ) />
+			<cfset oSelectInterface = createObject("component", "Components.SelectElement").init( WebElementReference=arguments.WebElementReference ) />
 			<cfset setSelectInterface( SelectInterfaceReference=oSelectInterface ) />
 		</cfif>
 
@@ -23,10 +23,10 @@
 		<cfargument name="WebElementReference" type="any" required="true" />
 
 		<cfif isObject(arguments.WebElementReference) IS false >
-			<cfthrow message="Argument 'WebElementReference' is not an object" />
+			<cfthrow message="Error setting Selenium's Java WebElement" detail="Argument 'WebElementReference' is not an object" />
 		</cfif>
 		<cfif isInstanceOf(arguments.WebElementReference, "org.openqa.selenium.remote.RemoteWebElement") IS false >
-			<cfthrow message="Argument 'WebElementReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebElement'" />
+			<cfthrow message="Error setting Selenium's Java WebElement" detail="Argument 'WebElementReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebElement'" />
 		</cfif>
 
 		<cfset oJavaWebElement = arguments.WebElementReference />
@@ -37,7 +37,7 @@
 	</cffunction>
 
 	<cffunction name="setSelectInterface" returntype="void" access="private" hint="" >
-		<cfargument name="SelectInterfaceReference" type="SelectElement" required="true" />
+		<cfargument name="SelectInterfaceReference" type="Components.SelectElement" required="true" />
 
 		<cfset oSelectInterface = arguments.SelectInterfaceReference />
 	</cffunction>
@@ -115,10 +115,38 @@
 		<cfreturn getJavaWebElement().isEnabled() />
 	</cffunction>
 
+	<cffunction name="isSelected" returntype="boolean" access="public" hint="Checks if the element is selected or not. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag. It will just return false." >
+		<cfreturn getJavaWebElement().isSelected() />
+	</cffunction>
+
+	<cffunction name="selectIfNotSelected" returntype="void" access="public" hint="Selects this element if it's de-selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
+		<cfif isSelected() IS false >
+			<cfset click() />
+		</cfif>
+	</cffunction>
+
+	<cffunction name="deselectIfSelected" returntype="void" access="public" hint="De-selects this element if it's already selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
+		<cfif isSelected() >
+			<cfset click() />
+		</cfif>
+	</cffunction>
+
 	<cffunction name="write" returntype="void" access="public" hint="Simulate typing into this element. For some elements this will manipulate the value-attribute" >
 		<cfargument name="Text" type="array" required="true" hint="An array with each entry being a string that will be typed into the element" />
+		<cfargument name="AddToExistingText" type="boolean" required="false" default="false" hint="By default whatever text is already in the element will be cleared. Pass this as true to add to the existing text instead." />
+
+		<cfset var sCurrentTextIndex = "" />
+		<cfset var nArrayIterator = 1 />
+
+		<cfloop array=#arguments.Text# index="sCurrentTextIndex" >
+			<cfset arguments.Text[nArrayIterator] = toString(sCurrentTextIndex) />
+			<cfset nArrayIterator = (nArrayIterator + 1) />
+		</cfloop>
 
 		<cftry>
+			<cfif arguments.AddToExistingText IS false >
+				<cfset clearText() />
+			</cfif>
 			<cfset getJavaWebElement().sendKeys(arguments.Text) />
 
 			<cfcatch type="org.openqa.selenium.ElementNotVisibleException" >
@@ -131,8 +159,8 @@
 		</cftry>
 	</cffunction>
 
-	<cffunction name="click" returntype="void" access="public" hint="Click this element.There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0" >
-		
+	<cffunction name="click" returntype="void" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0" >
+		<cfset sleep(200) />
 		<cftry>
 			<cfset getJavaWebElement().click() />
 
@@ -156,7 +184,7 @@
 		</cftry>
 	</cffunction>
 
-	<cffunction name="select" returntype="SelectElement" access="public" hint="Returns a reference to the interface used for interacting with the special functions of a select-tag. If this element is not a select-tag then an error will be thrown" >
+	<cffunction name="select" returntype="Components.SelectElement" access="public" hint="Returns a reference to the interface used for interacting with the special functions of a select-tag. If this element is not a select-tag then an error will be thrown" >
 
 		<cfif isSelectTag() IS false >
 			<cfthrow message="Error getting select-tag interface" detail="You can't use select-methods on this element because it's not a select-tag. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />

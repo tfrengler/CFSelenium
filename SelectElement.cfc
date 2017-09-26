@@ -3,16 +3,16 @@
 
 	<cfset oJavaSelectInterface = createObject("java", "java.lang.Object") />
 
-	<cffunction name="init" returntype="SelectElement" access="public" hint="Constructor" >
+	<cffunction name="init" returntype="Components.SelectElement" access="public" hint="Constructor" >
 		<cfargument name="WebElementReference" type="any" required="true" />
 
 		<cfset var oJavaSelectInterface = createObject("java", "java.lang.Object") />
 
 		<cfif isObject(arguments.WebElementReference) IS false >
-			<cfthrow message="Argument 'WebElementReference' is not an object" />
+			<cfthrow message="Error initializing SelectElement" detail="Argument 'WebElementReference' is not an object" />
 		</cfif>
 		<cfif isInstanceOf(arguments.WebElementReference, "org.openqa.selenium.remote.RemoteWebElement") IS false >
-			<cfthrow message="Argument 'WebElementReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebElement'" />
+			<cfthrow message="Error initializing SelectElement" detail="Argument 'WebElementReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebElement'" />
 		</cfif>
 
 		<cfset oJavaSelectInterface = createObject("java", "org.openqa.selenium.support.ui.Select").init( arguments.WebElementReference ) />
@@ -29,11 +29,11 @@
 		<cfargument name="JavaSelectReference" type="any" required="true" />
 
 		<cfif isObject(arguments.JavaSelectReference) IS false >
-			<cfthrow message="Argument 'JavaSelectReference' is not an object" />
+			<cfthrow message="Error setting Java select interface" detail="Argument 'JavaSelectReference' is not an object" />
 		</cfif>
 
 		<cfif isInstanceOf(arguments.JavaSelectReference, "org.openqa.selenium.support.ui.Select") IS false >
-			<cfthrow message="Argument 'JavaSelectReference' is not an instance of 'org.openqa.selenium.support.ui.Select'" />
+			<cfthrow message="Error setting Java select interface" detail="Argument 'JavaSelectReference' is not an instance of 'org.openqa.selenium.support.ui.Select'" />
 		</cfif>
 
 		<cfset oJavaSelectInterface = arguments.JavaSelectReference />
@@ -56,7 +56,7 @@
 		<cfif arrayLen(aListOfOptionsAsJavaObjects) GT 0 >
 			<cfloop array="#aListOfOptionsAsJavaObjects#" index="oCurrentWebElement" >
 
-				<cfset oElement = createObject("component", "Element").init( WebElementReference=oCurrentWebElement ) />
+				<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oCurrentWebElement ) />
 				<cfset arrayAppend(aListOfOptionsAsCFObjects, oElement) />
 
 			</cfloop>
@@ -75,7 +75,7 @@
 		<cfif arrayLen(aListOfOptionsAsJavaObjects) GT 0 >
 			<cfloop array="#aListOfOptionsAsJavaObjects#" index="oCurrentWebElement" >
 
-				<cfset oElement = createObject("component", "Element").init( WebElementReference=oCurrentWebElement ) />
+				<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oCurrentWebElement ) />
 				<cfset arrayAppend(aListOfOptionsAsCFObjects, oElement) />
 
 			</cfloop>
@@ -84,7 +84,7 @@
 		<cfreturn aListOfOptionsAsCFObjects />
 	</cffunction>
 
-	<cffunction name="getFirstSelectedOption" returntype="Element" access="public" hint="Returns the first selected option in this select tag (or the currently selected option in a normal select)" >
+	<cffunction name="getFirstSelectedOption" returntype="Components.Element" access="public" hint="Returns the first selected option in this select tag (or the currently selected option in a normal select)" >
 	
 		<cfset var oElement = "" />
 		<cfset var oJavaElement = "" />
@@ -93,11 +93,11 @@
 			<cfset var oJavaElement = getJavaSelectInterface().getFirstSelectedOption() />
 
 			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
-				<cfthrow message="Cannot select the first selected option because this select tag has no selected elements." />
+				<cfthrow message="Error getting first selected option" detail="Cannot select the first selected option because this select tag has no selected elements." />
 			</cfcatch>
 		</cftry>
 
-		<cfset oElement = createObject("component", "Element").init( WebElementReference=oJavaElement ) />
+		<cfset oElement = createObject("component", "Components.Element").init( WebElementReference=oJavaElement ) />
 
 		<cfreturn oElement />	
 	</cffunction>
@@ -109,7 +109,7 @@
 			<cfset getJavaSelectInterface().selectByVisibleText(arguments.Text) />
 
 			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
-				<cfthrow message="Can't select option by visible text. There's no option of this select tag with this inner text: #encodeForHTML(arguments.Text)#" />
+				<cfthrow message="Error selecting by visible text" detail="Can't select option by visible text. There's no option of this select tag with this inner text: #encodeForHTML(arguments.Text)#" />
 			</cfcatch>
 		</cftry>
 	</cffunction>
@@ -121,7 +121,7 @@
 			<cfset getJavaSelectInterface().selectByIndex(arguments.Index) />
 
 			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
-				<cfthrow message="Can't select option by index value. The index value is likely out of bounds. Your target index: #arguments.Index# | Actual amount of options: #getNumberOfOptions()#" />
+				<cfthrow  message="Error selecting by index" detail="Can't select option by index value. The index value is likely out of bounds. Your target index: #arguments.Index# | Actual amount of options: #getNumberOfOptions()#" />
 			</cfcatch>
 		</cftry>
 	</cffunction>
@@ -133,7 +133,7 @@
 			<cfset getJavaSelectInterface().selectByValue(arguments.Value) />
 
 			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
-				<cfthrow message="Can't select option by value. There's no option of this select tag with this value: #encodeForHTML(arguments.Value)#" />
+				<cfthrow  message="Error selecting by value" detail="Can't select option by value. There's no option of this select tag with this value: #encodeForHTML(arguments.Value)#" />
 			</cfcatch>
 		</cftry>
 	</cffunction>
@@ -143,7 +143,7 @@
 			<cfset getJavaSelectInterface().deselectAll() />
 
 			<cfcatch type="java.lang.UnsupportedOperationException" >
-				<cfthrow message="Can't de-select all options in this select tag because it's not multi-select enabled." />
+				<cfthrow message="Error deselecting all select options" detail="Can't de-select all options in this select tag because it's not multi-select enabled." />
 			</cfcatch>
 		</cftry>
 	</cffunction>
@@ -152,14 +152,14 @@
 		<cfargument name="Value" type="string" required="true" hint="The value in text of the option you want to de-select" />
 
 		<cfif getJavaSelectInterface().isMultiple() IS false >
-			<cfthrow message="Can't de-select option by value in this select tag because it's not multi-select enabled." />
+			<cfthrow message="Error deselecting by value" detail="Can't de-select option by value in this select tag because it's not multi-select enabled." />
 		</cfif>
 
 		<cftry>
 			<cfset getJavaSelectInterface().deselectByValue(arguments.Value) />
 
 			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
-				<cfthrow message="Can't de-select option by value. There's no option of this select tag with this value: #encodeForHTML(arguments.Value)#" />
+				<cfthrow message="Error deselecting by value" detail="Can't de-select option by value. There's no option of this select tag with this value: #encodeForHTML(arguments.Value)#" />
 			</cfcatch>
 		</cftry>
 	</cffunction>
@@ -168,14 +168,14 @@
 		<cfargument name="Index" type="numeric" required="true" hint="The index number of the option you want to de-select. Note that the indexes start from 0" />
 
 		<cfif getJavaSelectInterface().isMultiple() IS false >
-			<cfthrow message="Can't de-select option by index in this select tag because it's not multi-select enabled." />
+			<cfthrow message="Error deselecting by index" detail="Can't de-select option by index in this select tag because it's not multi-select enabled." />
 		</cfif>
 		
 		<cftry>
 			<cfset getJavaSelectInterface().deselectByIndex(arguments.Index) />
 
 			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
-				<cfthrow message="Can't de-select option by index value. The index value is likely out of bounds. Your target index: #arguments.Index# | Actual amount of options: #getNumberOfOptions()#" />
+				<cfthrow message="Error deselecting by index" detail="Can't de-select option by index value. The index value is likely out of bounds. Your target index: #arguments.Index# | Actual amount of options: #getNumberOfOptions()#" />
 			</cfcatch>
 		</cftry>
 	</cffunction>
@@ -184,14 +184,14 @@
 		<cfargument name="Text" type="string" required="true" hint="The text of the option you want to de-select" />
 
 		<cfif getJavaSelectInterface().isMultiple() IS false >
-			<cfthrow message="Can't de-select option by inner text in this select tag because it's not multi-select enabled." />
+			<cfthrow message="Error deselecting by visible text" detail="Can't de-select option by inner text in this select tag because it's not multi-select enabled." />
 		</cfif>
 		
 		<cftry>
 			<cfset getJavaSelectInterface().deselectByVisibleText(arguments.Text) />
 
 			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
-				<cfthrow message="Can't de-select option by visible text. There's no option of this select tag with this inner text: #encodeForHTML(arguments.Text)#" />
+				<cfthrow message="Error deselecting by visible text" detail="Can't de-select option by visible text. There's no option of this select tag with this inner text: #encodeForHTML(arguments.Text)#" />
 			</cfcatch>
 		</cftry>
 	</cffunction>
