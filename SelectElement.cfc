@@ -90,7 +90,7 @@
 		<cfset var oJavaElement = "" />
 		
 		<cftry>
-			<cfset var oJavaElement = getJavaSelectInterface().getFirstSelectedOption() />
+			<cfset oJavaElement = getJavaSelectInterface().getFirstSelectedOption() />
 
 			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
 				<cfthrow message="Error getting first selected option" detail="Cannot select the first selected option because this select tag has no selected elements." />
