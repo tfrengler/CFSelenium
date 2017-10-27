@@ -1,4 +1,4 @@
-<cfcomponent output="false" hint="An 'interface'/extension that is injected into Browser.cfc. It contains shorthand methods designed to easily grab elements with a minimum of fuss using specific, commonly used attributes such as id, class, title, name etc. This means that searching for attributes that could have values shared among multiple elements, only the first element encountered in the DOM will be retrieved (unless you specify the Multiple-argument). All the methods (with a few exceptions) operate using cssSelectors because I find them really powerful and you can get quite specific in your searches." >
+<cfcomponent output="false" hint="An interface that is injected into Browser.cfc (composition). It contains shorthand methods designed to easily grab elements with a minimum of fuss using specific, commonly used attributes such as id, class, title, name etc. This means that searching for attributes that could have values shared among multiple elements, only the first element encountered in the DOM will be retrieved (unless you specify the Multiple-argument). All the methods (with a few exceptions) operate using cssSelectors because I find them really powerful and you can get quite specific in your searches." >
 <cfprocessingdirective pageencoding="utf-8" />
 
 	<cfset oBrowser = "" />
@@ -6,9 +6,9 @@
 	<!--- PRIVATE METHODS --->
 
 	<cffunction name="setBrowser" returntype="void" access="private" >
-		<cfargument name="Data" type="Components.Browser" required="yes" />
+		<cfargument name="data" type="Components.Browser" required="yes" />
 
-		<cfset oBrowser = arguments.Data />
+		<cfset oBrowser = arguments.data />
 	</cffunction>
 
 	<cffunction name="getBrowser" returntype="Components.Browser" access="private" >
@@ -16,9 +16,9 @@
 	</cffunction>
 
 	<cffunction name="init" returntype="Components.ElementLocator" access="public" hint="Constructor" >
-		<cfargument name="BrowserReference" type="Components.Browser" required="true" />
+		<cfargument name="browserReference" type="Components.Browser" required="true" />
 
-		<cfset setBrowser(Data=arguments.BrowserReference) />
+		<cfset setBrowser(Data=arguments.browserReference) />
 
 		<cfreturn this />
 	</cffunction>
@@ -66,10 +66,10 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
 		<cfset var ReturnData = "" />
-		<cfset var sSearchString = "[title='#arguments.Title#']" />
+		<cfset var sSearchString = "[title='#arguments.title#']" />
 
 		<cfif len(arguments.onlyElementsOfTag) GT 0 >
-			<cfset sSearchString = "#arguments.onlyElementsOfTag#[title='#arguments.Title#']" />
+			<cfset sSearchString = "#arguments.onlyElementsOfTag#[title='#arguments.title#']" />
 		</cfif>
 
 		<cfif arguments.multiple >
@@ -92,7 +92,7 @@
 		<cfargument name="onlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain id, rather than any element." />
 
 		<cfset var ReturnData = "" />
-		<cfset var sSearchString = "###arguments.Id#" />
+		<cfset var sSearchString = "###arguments.id#" />
 
 		<cfif len(arguments.onlyElementsOfTag) GT 0 >
 			<cfset sSearchString = "#arguments.onlyElementsOfTag##sSearchString#" />
@@ -112,15 +112,15 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
 		<cfset var ReturnData = "" />
-		<cfset var sSearchString = ".#arguments.ClassName#" />
+		<cfset var sSearchString = ".#arguments.className#" />
 
 		<!--- With the normal method you can't search for multiple class names but you can using css selector [class=] --->
-		<cfif find(" ", arguments.ClassName) GT 0 >
+		<cfif find(" ", arguments.className) GT 0 >
 
 			<cfif len(arguments.onlyElementsOfTag) GT 0 >
-				<cfset sSearchString="#arguments.onlyElementsOfTag#[class='#arguments.ClassName#']" />
+				<cfset sSearchString="#arguments.onlyElementsOfTag#[class='#arguments.className#']" />
 			<cfelse>
-				<cfset sSearchString="[class='#arguments.ClassName#']" />
+				<cfset sSearchString="[class='#arguments.className#']" />
 			</cfif>
 
 		<cfelse>
@@ -150,7 +150,7 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
 		<cfset var ReturnData = "" />
-		<cfset var sSearchString = "[name='#arguments.Name#']" />
+		<cfset var sSearchString = "[name='#arguments.name#']" />
 
 		<cfif len(arguments.onlyElementsOfTag) GT 0 >
 			<cfset sSearchString="#arguments.onlyElementsOfTag##sSearchString#" />
@@ -178,10 +178,10 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
 		<cfset var ReturnData = "" />
-		<cfset var sSearchString = "//*[text()='#arguments.Text#']" />
+		<cfset var sSearchString = "//*[normalize-space(.)='#arguments.text#']" />
 
 		<cfif len(arguments.onlyElementsOfTag) GT 0 >
-			<cfset sSearchString= "//#arguments.onlyElementsOfTag#[text()='#arguments.Text#']" />
+			<cfset sSearchString= "//#arguments.onlyElementsOfTag#[normalize-space(.)='#arguments.text#']" />
 		</cfif>
 
 		<cfif arguments.multiple >
@@ -206,10 +206,10 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
 		<cfset var ReturnData = "" />
-		<cfset var sSearchString = "//*[text()[contains(.,'#arguments.Text#')]]" />
+		<cfset var sSearchString = "//*[text()[contains(.,'#arguments.text#')]]" />
 
 		<cfif len(arguments.onlyElementsOfTag) GT 0 >
-			<cfset sSearchString= "//#arguments.onlyElementsOfTag#[text()[contains(.,'#arguments.Text#')]]" />
+			<cfset sSearchString= "//#arguments.onlyElementsOfTag#[text()[contains(.,'#arguments.text#')]]" />
 		</cfif>
 
 		<cfif arguments.multiple >
