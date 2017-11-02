@@ -102,6 +102,8 @@
 		<cfargument name="searchFor" type="string" required="true" hint="The search string to locate the element by. Can be an id, tag-name, class name, xpath, css selector etc" />
 		<cfargument name="locateUsing" type="array" required="false" default="#arrayNew(1)#" hint="The name(s) of the Selenium locator mechanisms to use. Use this to force using specific mechanism(s). If not passed then it will loop through them in sequence. Valid locators: id,cssSelector,xpath,name,className,linkText,partialLinkText,tagName,javascript" />
 		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#getFetchHiddenElements()#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
+		<cfargument name="javascriptArguments" type="array" required="false" default="#arrayNew(1)#" hint="Script arguments must be a number, a boolean, a string, WebElement, or an array of any of those combinations. The arguments will be made available to the JavaScript via the 'arguments' variable." />
+
 
 		<cfset var stFetchHTMLElementsArguments = structNew() />
 		<cfset var aElementCollection = arrayNew(1) />
@@ -109,6 +111,7 @@
 		<cfset stFetchHTMLElementsArguments.searchFor = arguments.searchFor />
 		<cfset stFetchHTMLElementsArguments.locateUsing = arguments.locateUsing />
 		<cfset stFetchHTMLElementsArguments.locateHiddenElements = arguments.locateHiddenElements />
+		<cfset stFetchHTMLElementsArguments.javascriptArguments = arguments.javascriptArguments />
 
 		<cfif 	structKeyExists(arguments, "searchContext") AND
 				isObject(arguments.searchContext) AND
@@ -135,6 +138,7 @@
 		<cfargument name="searchFor" type="string" required="true" hint="The search string to locate the elements by. Can be an id, tag-name, class name, css selector etc." />
 		<cfargument name="locateUsing" type="array" required="false" default="#arrayNew(1)#" hint="The name(s) of the Selenium locator mechanisms to use. Use this to force using specific mechanism(s). If not passed then it will loop through them in sequence. Valid locators: id,cssSelector,xpath,name,className,linkText,partialLinkText,tagName,javascript" />
 		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#getFetchHiddenElements()#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
+		<cfargument name="javascriptArguments" type="array" required="false" default="#arrayNew(1)#" hint="Script arguments must be a number, a boolean, a string, WebElement, or an array of any of those combinations. The arguments will be made available to the JavaScript via the 'arguments' variable." />
 
 		<cfset var stFetchHTMLElementsArguments = structNew() />
 		<cfset var aElementCollection = arrayNew(1) />
@@ -142,6 +146,7 @@
 		<cfset stFetchHTMLElementsArguments.searchFor = arguments.searchFor />
 		<cfset stFetchHTMLElementsArguments.locateUsing = arguments.locateUsing />
 		<cfset stFetchHTMLElementsArguments.locateHiddenElements = arguments.locateHiddenElements />
+		<cfset stFetchHTMLElementsArguments.javascriptArguments = arguments.javascriptArguments />
 
 		<cfif 	structKeyExists(arguments, "searchContext") AND
 				isObject(arguments.searchContext) AND

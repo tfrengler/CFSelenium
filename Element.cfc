@@ -65,7 +65,7 @@
 		<cfreturn getJavaWebElement().getAttribute("name") />
 	</cffunction>
 
-	<cffunction name="isSelectTag" returntype="boolean" access="private" hint="" >
+	<cffunction name="isSelectTag" returntype="boolean" access="public" hint="" >
 		<cfset var sElementType = getJavaWebElement().getTagName() />
 
 		<cfif sElementType EQ "select" >
@@ -230,6 +230,36 @@
 		</cfif>
 
 		<cfreturn ReturnData />
+	</cffunction>
+
+	<cffunction name="getParentElement" returntype="Components.Element" access="public" hint="" >
+
+		<cfreturn getWrappedBrowser().getElement(
+			searchFor="return arguments[0].parentElement",
+			locateUsing=["javascript"],
+			javascriptArguments=[getJavaWebElement()]
+		) />
+
+	</cffunction>
+
+	<cffunction name="getPreviousSiblingElement" returntype="Components.Element" access="public" hint="" >
+
+		<cfreturn getWrappedBrowser().getElement(
+			searchFor="return arguments[0].previousElementSibling",
+			locateUsing=["javascript"],
+			javascriptArguments=[getJavaWebElement()]
+		) />
+
+	</cffunction>
+
+	<cffunction name="getNextSiblingElement" returntype="Components.Element" access="public" hint="" >
+
+		<cfreturn getWrappedBrowser().getElement(
+			searchFor="return arguments[0].nextElementSibling",
+			locateUsing=["javascript"],
+			javascriptArguments=[getJavaWebElement()]
+		) />
+
 	</cffunction>
 
 </cfcomponent>
