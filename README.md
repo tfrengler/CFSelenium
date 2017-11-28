@@ -45,35 +45,53 @@ I developed this against Adobe Coldfusion 2016 and I have not paid special atten
 
 As far as folder structure goes there are two requirements: 
 
-**1:** All the CFCs from here are in a subfolder directly under the Application-root called "Components".
+**1:** All the CFCs from here are in a subfolder directly under the Application-root called **Components**.
 
-**2:** The webdriver binaries for running Selenium locally must be in a subfolder directly under the Application-root called "WebdriverBins".
+**2:** The webdriver binaries for running Selenium locally must be in a subfolder directly under the Application-root called **WebdriverBins**.
 
 The reason for the mappings requirement is simple: I struggled with trying to maintain two separate versions of the code (for work and for public use here on GitHub) so all the code is straight from my work versions. Sorry about that. You'll have to fork and/or edit the code yourself if you want to get rid of the reliance on my mappings.
 
-**SETTING UP**
+**SETTING UP - SELENIUM'S JAR FILES**
+
+You need Selenium's Java bindings (obviously) which you can get here: http://selenium-release.storage.googleapis.com/index.html
+Note that you need the **selenium-server** files! Next step is how to load in the jar files in Coldfusion. There are two supported ways to go about this:
+
+- Putting them inside the Coldfusion root folder\WEB-INF\libs. From here they'll be automagically loaded in when CF starts up.
+- Use Mark Mandel's excellent Javaloader to load the jar files.
+
+You can't use the class path in the admin interface to load the jar files. There's some overlap between classes and methods used by CF and Selenium, and since CF's take precedence, Selenium won't work.
+
+I built in support for Javaloader and that's what I use myself. All you need to do is to pass an extra argument to **createBrowser()** in **WebdriverManager.cfc** (see next section) which points to the folder where your Selenium jar files are. Note that all the jar files from the .zip should be in ONE folder (no subfolders)!.
+
+**SETTING UP - CREATING A WEBDRIVER**
 
 The **WebdriverManager.cfc** is the interface for creating the webdriver (which I call a Browser) and optionally a service (which is not abstracted, it's the original Selenium Java object). The simplest example for creating a webdriver for Chrome would look like this:
 ```
 <cfset Browser = createObject('component', 'Components.WebDriverManager').createBrowser(Browser='Chrome') />
 ```
-This would create a local webdriver that runs on your machine, meaning you need to have the webdriver binaries installed on your local. If you are ONLY running your tests remotely (for which you need a server running the Selenium Standalone Server) you can omit installing the webdriver binaries locally.
+This would create a local webdriver that runs on your machine, meaning you need to have the webdriver binaries somewhere (up to you) on your local machine. If you are ONLY running your tests remotely (for which you need a server running the Selenium Standalone Server) you can omit putting the webdriver binaries on your local machine.
 
 Alternatively for running on local you could also do this:
 ```
 <cfset Browser = createObject('component', 'Components.WebDriverManager').createBrowser(
-	Browser='Chrome',
-	Remote=true,
-	RemoteServerAddress='http://localhost:9515',
+	browser='Chrome',
+	remote=true,
+	remoteServerAddress='http://localhost:9515',
 ) />
 ```
-Which means you tell the webdriver to execute in remote mode but you point it at your local. In this way you can put your webdriver binaries whereever you want but you need to manually start and close them. For true remote mode you'd point **RemoteServerAddress** at the actual machine running the standalone Selenium server.
+Which means you tell the webdriver to execute in remote mode but you point it at your local. In this way you can put your webdriver binaries whereever you want but you need to manually start and close the binaries. For true remote mode you'd point **RemoteServerAddress** at the actual machine running the standalone Selenium server.
 
+If you're intent on using Javaloader to load the Selenium jars you have to instantiate javaloader somewhere and then pass in a reference to createBrowser():
+```
+<cfset Browser = createObject('component', 'Components.WebDriverManager').createBrowser(
+	javaLoaderReference = javaloaderobject
+) />
+```
 The WebdriverManager.cfc is static and is meant to work as a singleton. It doesn't allow you to modify its internal variables and it doesn't rely on them changing at all. So in your own environment you could put it in a (semi)persistent scope and use it to create webdrivers and services.
 
 **USAGE**
 
-I recommend taking a look through the code to see what methods you've got available, and the arguments they accept. Broadly speaking the Browser.cfc is for interacting with the browser and Element.cfc is for interacting with a DOM element.
+I recommend taking a look through the code to see what methods you've got available, and the arguments they accept. Broadly speaking the **Browser.cfc** is for interacting with the browser and **Element.cfc** is for interacting with a DOM element.
 
 Below are some explanations along with examples.
 
@@ -89,15 +107,15 @@ Inside **Browser.cfc** are the methods for interacting with the browser:
 - runJavascript()
 - takeScreenshot()
 
-navigateTo() is one of the most obvious ones you'll use a lot, as well as the getElement-methods. quit() closes the browser and ends the session.
+**navigateTo()** is one of the most obvious ones you'll use a lot, as well as the getElement-methods. **quit()** closes the browser and ends the session.
 
 **GRABBING ELEMENTS**
 
 As mentioned above the magic of grabbing and interacting with elements happens inside **Browser.cfc**. Here you have two choices:
 
-**1:** Use getElement() or getElements(), which allows you the most specific control over how to target elements or...
+**1:** Use **getElement()** or **getElements()**, which allows you the most specific control over how to target elements or...
 
-**2:** Use getElementBy() which is an interface for ElementLocator.cfc that has easy to use methods for grabbing elements by the most common means, such as ID, class, name, value etc.
+**2:** Use **getElementBy()** which is an interface for **ElementLocator.cfc** that has easy to use methods for grabbing elements by the most common means, such as ID, class, name, value etc.
 
 getElement() and getElements() structure are identical. The only difference is that the former retrieves a single element whereas the latter returns an array. The syntax is:
 ```
@@ -115,7 +133,7 @@ Broken down the arguments are:
 - **locateHiddenElements (boolean):** Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible.
 - **javascriptArguments (array):** Used only locateUsing uses "javascript". Script arguments must be a number, a boolean, a string, WebElement, or an array of any of those combinations. The arguments will be made available to the JavaScript via the 'arguments' variable.
 
-getElementBy() is for the most part what you'd use unless you want advanced control over what you're searching for. It contains methods such as:
+**getElementBy()** is for the most part what you'd use unless you want advanced control over what you're searching for. It contains methods such as:
 
 - title()
 - id()
@@ -165,7 +183,7 @@ Once you've gotten an element you can get information about it or interact with 
 - getPreviousSiblingElement()
 - getNextSiblingElement()
 
-click() and write() are probably the interaction methods you'll use most. click() is selfexplanatory. write() accepts an argument called **text** which may surprise you to learn is an array and not a string. This is how the underlying Java method works as well so I chose to keep it that way. Furthermore, while the Java method by default ADDS to the existing text in an element, my method first clears it and then writes in it. There's a boolean argument to write() called **addToExistingText** to allow it to append the text instead.
+**click()** and **write()** are probably the interaction methods you'll use most. click() is selfexplanatory. write() accepts an argument called **text** which may surprise you to learn is an array and not a string. This is how the underlying Java method works as well so I chose to keep it that way. Furthermore, while the Java method by default ADDS to the existing text in an element, my method first clears it and then writes in it. There's a boolean argument to write() called **addToExistingText** to allow it to append the text instead.
 
 There's also an extension called **SelectElement.cfc** that you can grab via the select()-method. This is an interface for interacting with select-elements that require some additional logic:
 
@@ -195,8 +213,8 @@ Here's an example from one of my scripts at work so you can see the flow. It use
 
 <cfset oBrowser.getElementBy().id( id="LeftNavVacaturesAnchor" ).click() />
 <cfset oBrowser.getElement(
-	SearchFor="button[title^='Add']",
-	LocateUsing=["cssSelector"]
+	searchFor="button[title^='Add']",
+	locateUsing=["cssSelector"]
 	).click() 
 />
 
@@ -221,13 +239,13 @@ Here's an example from one of my scripts at work so you can see the flow. It use
 ```
 **WHAT TO EXPECT (AND NOT EXPECT):**
 
-Don't come expecting a fully fledged framework that will suit all your needs and covers all of Selenium's features. Don't get me wrong: it works and does what it does well, but the goal is to offer a working example of how that can be achieved, plus it's developed and maintained by just me. But I urge you to to download it, modify, change and extend it as much as possible or just use it as research to figure out how to pull it off yourself.
+Don't come expecting a framework that will suit all your needs and covers all of Selenium's features. Don't get me wrong: it works and does what it does well but it's developed and maintained by just me, and its development is driven by our needs. But I urge you to to download it, modify, change and extend it as much as possible or just use it as research to figure out how to pull it off yourself.
 
-In general most of the Java interactions are abstracted away and you'll be doing all your calls to Coldfusion objects and code. As mentioned already I have made public methods that can get you the original Java object so that you'll still be able to access all the original Selenium functions directly. I have wrapped the most commonly used Selenium methods, which are then exposed via CF methods, and added my own original methods for things that I find handy. More of these will likely be added as I keep writing tests for this.
+In general most of the Java interactions are abstracted away and you'll be doing all your calls to Coldfusion objects and code. As mentioned already I have made public methods that can get you the original Java object so that you'll still be able to access all the original Selenium functions directly. I have wrapped the most commonly used Selenium methods and added my own original methods for things that I find handy. More of these will likely be added as I write tests and use the framework.
 
 The framework as I present it here it also completely stand-alone. This means I built no support in for reporters, testrunners, or any kind of known (or unknown) test harnesses or frameworks of any kind. To do that would have been too much for me. You'd have to build that kind of hook yourself.
 
-There's a copious amount of type checking and error handling because that's one of my personal bugbears. Also the framework is liberal about using custom throws when it hits conditions that are considered bad. My aim was to abstract away some of the frankly quite esoteric errors that Selenium occasionally throws and give you clear, concise information about what went wrong so you can easily find and fix it. Also given the serial from-A-to-B nature of tests in general, plus the fact that automation is usually hands- and eyes off, I felt it good practice to have the framework throw hard errors when something isn't right, rather than just continuing.
+There's a copious amount of type checking and error handling because that's one of my personal bugbears. Also the framework is liberal about using throws and custom exceptions when it hits conditions that are considered bad. My aim was to abstract away some of the frankly quite esoteric errors that Selenium occasionally throws and give you clear, concise information about what went wrong so you can easily find and fix it. Also given the serial from-A-to-B nature of tests in general, plus the fact that automation is usually hands- and eyes off, I felt it good practice to have the framework throw hard errors when something isn't right, rather than just continuing.
 
 **NOTES/TROUBLESHOOTING:**
 
