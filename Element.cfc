@@ -8,14 +8,23 @@
 	<cffunction name="init" returntype="Components.Element" access="public" hint="Constructor" >
 		<cfargument name="webElementReference" type="any" required="true" />
 		<cfargument name="browserReference" type="Components.Browser" required="false" />
+		<cfargument name="javaLoaderReference" type="any" required="false" />
 
 		<cfset var oSelectInterface = "" />
+		<cfset var stSelectInterfaceArguments = structNew() />
+		<cfset stSelectInterfaceArguments.webElementReference = arguments.webElementReference />
 
 		<cfset setJavaWebElement( WebElementReference=arguments.webElementReference ) />
-		<cfset variables.oWrappedBrowser = arguments.browserReference />
+		<cfif structKeyExists(arguments, "browserReference") >
+			<cfset variables.oWrappedBrowser = arguments.browserReference />
+		</cfif>
+
+		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
+			<cfset stSelectInterfaceArguments.javaLoaderReference = arguments.javaLoaderReference />
+		</cfif>
 
 		<cfif isSelectTag() >
-			<cfset oSelectInterface = createObject("component", "Components.SelectElement").init( webElementReference=arguments.webElementReference ) />
+			<cfset oSelectInterface = createObject("component", "Components.SelectElement").init( argumentCollection = stSelectInterfaceArguments ) />
 			<cfset setSelectInterface( selectInterfaceReference=oSelectInterface ) />
 		</cfif>
 
@@ -27,9 +36,6 @@
 
 		<cfif isObject(arguments.webElementReference) IS false >
 			<cfthrow message="Error setting Selenium's Java WebElement" detail="Argument 'WebElementReference' is not an object" />
-		</cfif>
-		<cfif isInstanceOf(arguments.webElementReference, "org.openqa.selenium.remote.RemoteWebElement") IS false >
-			<cfthrow message="Error setting Selenium's Java WebElement" detail="Argument 'WebElementReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebElement'" />
 		</cfif>
 
 		<cfset oJavaWebElement = arguments.webElementReference />
@@ -256,6 +262,16 @@
 
 		<cfreturn getWrappedBrowser().getElement(
 			searchFor="return arguments[0].nextElementSibling",
+			locateUsing=["javascript"],
+			javascriptArguments=[getJavaWebElement()]
+		) />
+
+	</cffunction>
+
+	<cffunction name="getChildElements" returntype="array" access="public" hint="" >
+
+		<cfreturn getWrappedBrowser().getElements(
+			searchFor="return arguments[0].children",
 			locateUsing=["javascript"],
 			javascriptArguments=[getJavaWebElement()]
 		) />

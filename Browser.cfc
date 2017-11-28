@@ -6,16 +6,15 @@
 	<cfset nWaitForDOMReadyStateTimeOut = 0 />
 	<cfset bFetchHiddenElements = false />
 	<cfset bUseSeleniumImplicitWait = false />
+	<cfset oJavaLoader = "" />
 
 	<cffunction name="init" returntype="Components.Browser" access="public" hint="Constructor" >
 		<cfargument name="webDriverReference" type="any" required="true" hint="" />
 		<cfargument name="waitForDOMReadyStateTimeOut" type="numeric" required="false" default="30" />
+		<cfargument name="javaLoaderReference" type="any" required="false" />
 
 		<cfif isObject(arguments.WebDriverReference) IS false >
 			<cfthrow message="Error when initializing Browser" detail="Argument 'WebDriverReference' is not an object" />
-		</cfif>
-		<cfif isInstanceOf(arguments.WebDriverReference, "org.openqa.selenium.remote.RemoteWebDriver") IS false >
-			<cfthrow message="Error when initializing Browser" detail="Argument 'WebDriverReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebDriver'" />
 		</cfif>
 
 		<cfset setElementLocator( 
@@ -26,6 +25,10 @@
 
 		<cfset setJavaWebDriver( Data = arguments.webDriverReference ) />
 		<cfset nWaitForDOMReadyStateTimeOut = arguments.waitForDOMReadyStateTimeOut />
+
+		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
+			<cfset setJavaloader(data=arguments.javaLoaderReference) />
+		</cfif>
 
 		<cfreturn this />
 	</cffunction>
@@ -73,6 +76,16 @@
 		<cfset oElementLocator = arguments.data />
 	</cffunction>
 
+	<cffunction name="setJavaloader" returntype="void" access="private" >
+		<cfargument name="data" type="any" required="yes" />
+
+		<cfset oJavaLoader = arguments.data />
+	</cffunction>
+
+	<cffunction name="getJavaloader" returntype="any" access="public" >
+		<cfreturn oJavaLoader />
+	</cffunction>
+
 	<cffunction name="setJavaWebDriver" returntype="void" access="private" >
 		<cfargument name="data" type="any" required="yes" />
 
@@ -113,10 +126,7 @@
 		<cfset stFetchHTMLElementsArguments.locateHiddenElements = arguments.locateHiddenElements />
 		<cfset stFetchHTMLElementsArguments.javascriptArguments = arguments.javascriptArguments />
 
-		<cfif 	structKeyExists(arguments, "searchContext") AND
-				isObject(arguments.searchContext) AND
-				isInstanceOf(arguments.searchContext, "org.openqa.selenium.remote.RemoteWebElement") >
-			
+		<cfif structKeyExists(arguments, "searchContext") AND isObject(arguments.searchContext) >
 			<cfset stFetchHTMLElementsArguments.searchContext = arguments.searchContext />
 		</cfif>
 
@@ -148,10 +158,7 @@
 		<cfset stFetchHTMLElementsArguments.locateHiddenElements = arguments.locateHiddenElements />
 		<cfset stFetchHTMLElementsArguments.javascriptArguments = arguments.javascriptArguments />
 
-		<cfif 	structKeyExists(arguments, "searchContext") AND
-				isObject(arguments.searchContext) AND
-				isInstanceOf(arguments.searchContext, "org.openqa.selenium.remote.RemoteWebElement") >
-			
+		<cfif structKeyExists(arguments, "searchContext") AND isObject(arguments.searchContext) >
 			<cfset stFetchHTMLElementsArguments.searchContext = arguments.searchContext />
 		</cfif>
 
@@ -175,7 +182,9 @@
 		<cfset var sCurrentArgumentLocator = "" />
 		<cfset var ReturnDataFromScript = "" />
 		<cfset var aElementsFoundInDOM = arrayNew(1) />
-		<cfset var oBy = createObject("java", "org.openqa.selenium.By") />
+		<cfset var oBy = "" />
+		<cfset var stElementArguments = structNew() />
+		<cfset stElementArguments.browserReference = this />
 		<cfset var aValidSeleniumLocators = [ 
 			"id",
 			"cssSelector",
@@ -190,6 +199,13 @@
 			These are in order of priority and if LocateUsing is not defined it will loop through these and stop as soon as an element or elements are found.
 			The priority is based on: 1) locaters that are often used and: 2) on locaters that return only a single elements first, multiple elements second.
 		--->
+
+		<cfif isObject(getJavaloader()) >
+			<cfset oBy = getJavaloader().create("org.openqa.selenium.By") />
+			<cfset stElementArguments.javaLoaderReference = getJavaloader() />
+		<cfelse>
+			<cfset oBy = createObject("java", "org.openqa.selenium.By") />
+		</cfif>
 
 		<cfif isObject(arguments.searchContext) IS false >
 			<cfthrow message="Error fetching HTML element(s)" detail="Argument 'searchContext' is not an object" />
@@ -225,14 +241,14 @@
 					<cfif isArray(ReturnDataFromScript) >
 
 						<cfloop array="#ReturnDataFromScript#" index="CurrentJavascriptReturnData" >
-							<cfif isObject(CurrentJavascriptReturnData) AND isInstanceOf(CurrentJavascriptReturnData, "org.openqa.selenium.remote.RemoteWebElement") >
+							<cfif isObject(CurrentJavascriptReturnData) >
 								<cfset arrayAppend( aElementsFoundInDOM, CurrentJavascriptReturnData ) />
 							</cfif>
 						</cfloop>
 
 					<cfelse>
 
-						<cfif isObject(ReturnDataFromScript) AND isInstanceOf(ReturnDataFromScript, "org.openqa.selenium.remote.RemoteWebElement") >
+						<cfif isObject(ReturnDataFromScript) >
 							<cfset arrayAppend( aElementsFoundInDOM, ReturnDataFromScript ) />
 						</cfif>
 					</cfif>
@@ -267,20 +283,20 @@
 			<cfif arrayIsEmpty(aElementsFoundInDOM) IS false >
 				<cfloop array="#aElementsFoundInDOM#" index="oCurrentWebElement" >
 
+					<cfset stElementArguments.webElementReference = oCurrentWebElement />
+
 					<cfif arguments.locateHiddenElements IS false >
 
-						<cfif oCurrentWebElement.isDisplayed() >	
+						<cfif oCurrentWebElement.isDisplayed() >
 							<cfset oElement = createObject("component", "Components.Element").init( 
-								webElementReference=oCurrentWebElement,
-								browserReference=this
+								argumentCollection = stElementArguments
 							) />
 							<cfset arrayAppend(aReturnData, oElement) />
 						</cfif>
 
 					<cfelse>
 						<cfset oElement = createObject("component", "Components.Element").init( 
-							webElementReference=oCurrentWebElement,
-							browserReference=this
+							argumentCollection = stElementArguments
 						) />
 						<cfset arrayAppend(aReturnData, oElement) />
 					</cfif>
@@ -433,9 +449,15 @@
 		<cfargument name="format" type="string" required="false" default="bytes" hint="The format you want the screenshot returned as. Can return either base64, raw bytes or a java.io.File-object. Valid parameter strings are: 'bytes', 'base64' or 'file'." />
 
  		<cfset var sValidFormats = "bytes,base64,file" />
- 		<cfset var oOutputType = createObject("java", "org.openqa.selenium.OutputType") />
+ 		<cfset var oOutputType = createObject("java", "java.lang.Object") />
  		<cfset var Type = "" />
  		<cfset var Screenshot = "" />
+
+ 		<cfif isObject(getJavaloader()) >
+			<cfset oOutputType = getJavaloader().create("org.openqa.selenium.OutputType") />
+		<cfelse>
+			<cfset oOutputType = createObject("java", "org.openqa.selenium.OutputType") />
+		</cfif>
 
  		<cfif listFindNoCase(sValidFormats, arguments.format) GT 0 >
 

@@ -5,18 +5,17 @@
 
 	<cffunction name="init" returntype="Components.SelectElement" access="public" hint="Constructor" >
 		<cfargument name="webElementReference" type="any" required="true" />
-
-		<cfset var oJavaSelectInterface = createObject("java", "java.lang.Object") />
+		<cfargument name="javaLoaderReference" type="any" required="false" />
 
 		<cfif isObject(arguments.webElementReference) IS false >
 			<cfthrow message="Error initializing SelectElement" detail="Argument 'webElementReference' is not an object" />
 		</cfif>
-		<cfif isInstanceOf(arguments.webElementReference, "org.openqa.selenium.remote.RemoteWebElement") IS false >
-			<cfthrow message="Error initializing SelectElement" detail="Argument 'webElementReference' is not an instance of 'org.openqa.selenium.remote.RemoteWebElement'" />
-		</cfif>
 
-		<cfset oJavaSelectInterface = createObject("java", "org.openqa.selenium.support.ui.Select").init( arguments.webElementReference ) />
-		<cfset setJavaSelectInterface( JavaSelectReference=oJavaSelectInterface ) />
+		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
+			<cfset setJavaSelectInterface( JavaSelectReference=arguments.javaLoaderReference.create("org.openqa.selenium.support.ui.Select").init(arguments.webElementReference) ) />
+		<cfelse>
+			<cfset setJavaSelectInterface( JavaSelectReference=createObject("java", "org.openqa.selenium.support.ui.Select").init(arguments.webElementReference) ) />
+		</cfif>
 
 		<cfreturn this />
 	</cffunction>
@@ -30,10 +29,6 @@
 
 		<cfif isObject(arguments.javaSelectReference) IS false >
 			<cfthrow message="Error setting Java select interface" detail="Argument 'javaSelectReference' is not an object" />
-		</cfif>
-
-		<cfif isInstanceOf(arguments.javaSelectReference, "org.openqa.selenium.support.ui.Select") IS false >
-			<cfthrow message="Error setting Java select interface" detail="Argument 'JavaSelectReference' is not an instance of 'org.openqa.selenium.support.ui.Select'" />
 		</cfif>
 
 		<cfset oJavaSelectInterface = arguments.javaSelectReference />

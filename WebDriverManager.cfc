@@ -151,14 +151,29 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfargument name="browserVersion" type="numeric" required="false" default=0 hint="The version of the browser, or pass as empty if you don't know (or care for that matter)." />
 		<cfargument name="browserArguments" type="array" required="no" default="#arrayNew(1)#" hint="An array of arguments specific to the browser that you want the webdriver to start with. NOTE: For the browsers that support it, you can get a noticable performance boost by disabling automatic proxy detection!" />
 		<cfargument name="pathToWebDriverBIN" type="string" required="no" hint="The full path to the webdriver executable. If not passed then the default location will be used (see mappings in Application.cfc)" />
+		<cfargument name="javaLoaderReference" type="any" required="false" />
 
-		<cfset var oBrowser = createObject("java", "java.lang.Object") />
+		<cfset var oJavaLoader = "" />
+		<cfset var oBrowser = "" />
 		<cfset var stBrowserData = getBrowserData(arguments.browser) />
-		<cfset var oWebDriver = createObject("java", "java.lang.Object") />
 		<cfset var oBrowserCapabilities = createObject("java", "java.lang.Object") />
 		<cfset var sPathToBIN = replace("#expandPath('/DriverBins')#\\#stBrowserData.nameOfBinary#", "\", "\\") />
-		<cfset var oBrowserDesiredCapabilities = createObject("java", "org.openqa.selenium.remote.DesiredCapabilities") />
-		<cfset var oBrowserOptions = createObject("java", "org.openqa.selenium.#stBrowserData.seleniumJavaPackageName#.#stBrowserData.browserOptionsJarName#").init() />
+		<cfset var oBrowserDesiredCapabilities = createObject("java", "java.lang.Object") />
+		<cfset var oBrowserOptions = createObject("java", "java.lang.Object") />
+		<cfset var stBrowserArguments = structNew() />
+
+		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
+			<cfset oJavaLoader = arguments.javaLoaderReference />
+		</cfif>
+
+		<cfif isObject(oJavaLoader) >
+			<cfset oBrowserOptions = oJavaLoader.create("org.openqa.selenium.#stBrowserData.seleniumJavaPackageName#.#stBrowserData.browserOptionsJarName#").init() />
+			<cfset oBrowserDesiredCapabilities = oJavaLoader.create("org.openqa.selenium.remote.DesiredCapabilities") />
+			<cfset stBrowserArguments.javaLoaderReference = arguments.javaLoaderReference />
+		<cfelse>
+			<cfset oBrowserOptions = createObject("java", "org.openqa.selenium.#stBrowserData.seleniumJavaPackageName#.#stBrowserData.browserOptionsJarName#").init() />
+			<cfset oBrowserDesiredCapabilities = createObject("java", "org.openqa.selenium.remote.DesiredCapabilities") />
+		</cfif>
 
 		<cfif isValidBrowser(arguments.browser) IS false >
 			<cfthrow message="Error while creating browser" detail="Argument 'Browser' which you passed as '#arguments.browser#' is not a valid browser name!" />
@@ -210,16 +225,31 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		</cfif>
 
 		<cfif arguments.browser IS "Firefox" >
-			<cfset oBrowserOptions.setProfile( createObject("java", "org.openqa.selenium.firefox.FirefoxProfile").init() ) />
+
+			<cfif isObject(oJavaLoader) >
+				<cfset oBrowserOptions.setProfile( oJavaLoader.create("org.openqa.selenium.firefox.FirefoxProfile").init() ) />
+			<cfelse>
+				<cfset oBrowserOptions.setProfile( createObject("java", "org.openqa.selenium.firefox.FirefoxProfile").init() ) />
+			</cfif>
+
 			<cfset oBrowserOptions.addTo( oBrowserCapabilities ) />
 		</cfif>
 
 		<cfif arguments.remote >
 			<cftry>
-				<cfset oWebDriver = createObject("java", "org.openqa.selenium.remote.RemoteWebDriver").init(
-					createObject("java", "java.net.URL").init(arguments.remoteServerAddress),
-					oBrowserCapabilities
-				) />
+
+				<cfif isObject(oJavaLoader) >
+					<cfset stBrowserArguments.webDriverReference = oJavaLoader.create("org.openqa.selenium.remote.RemoteWebDriver").init(
+						createObject("java", "java.net.URL").init(arguments.remoteServerAddress),
+						oBrowserCapabilities
+					) />
+				<cfelse>
+					<cfset stBrowserArguments.webDriverReference = createObject("java", "org.openqa.selenium.remote.RemoteWebDriver").init(
+						createObject("java", "java.net.URL").init(arguments.remoteServerAddress),
+						oBrowserCapabilities
+					) />
+				</cfif>
+				
 			<cfcatch type="org.openqa.selenium.remote.UnreachableBrowserException" >
 				<cfthrow message="Error while creating browser" detail="Could not create a RemoteWebDriver instance. The server address and port likely couldn't be reached. You passed 'RemoteServerAddress' as: #arguments.RemoteServerAddress#" />
 			</cfcatch>
@@ -238,12 +268,17 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 			<cfelse>
 				<cfset createObject("java", "java.lang.System").setProperty("webdriver.#lCase(arguments.browser)#.driver", sPathToBIN) />
 			</cfif>
-			<cfset oWebDriver = createObject("java", "org.openqa.selenium.#LCase(arguments.browser)#.#stBrowserData.internalDriverName#").init(oBrowserCapabilities) />
+
+			<cfif isObject(oJavaLoader) >
+				<cfset stBrowserArguments.webDriverReference = oJavaLoader.create("org.openqa.selenium.#LCase(arguments.browser)#.#stBrowserData.internalDriverName#").init(oBrowserCapabilities) />
+			<cfelse>
+				<cfset stBrowserArguments.webDriverReference = createObject("java", "org.openqa.selenium.#LCase(arguments.browser)#.#stBrowserData.internalDriverName#").init(oBrowserCapabilities) />
+			</cfif>
 		</cfif>
 		<!--- Be aware that as SOON as the webdriver (either local or remote version) is invoked the webdriver binary will be started (and the browser opens, whether silent or not) --->
 
 		<cfset oBrowser = createObject("component", "Components.Browser").init(
-			WebDriverReference=oWebDriver
+			argumentCollection = stBrowserArguments
 		) />
 
 		<cfreturn oBrowser />
@@ -254,11 +289,18 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfargument name="useAnyFreePort" type="boolean" required="false" default="false" hint="Let the service use any free port available. Will override the Port-argument if passed as true." />
 		<cfargument name="port" type="numeric" required="no" default="0" hint="The port number you want the service to start the webdriver on. Will by default use the default port for the chosen browser's webdriver." />
 		<cfargument name="pathToWebDriverBIN" type="string" required="no" hint="The full path to the webdriver executable. If not passed then the default location will be used (see mappings in Application.cfc)" />
+		<cfargument name="javaLoaderReference" type="any" required="false" />
 
 		<cfset var stBrowserData = getBrowserData(arguments.browser) />
-		<cfset var oServiceBuilder = createObject("java", "org.openqa.selenium.#lCase(arguments.browser)#.#stBrowserData.serviceJarName#$Builder") />
+		<cfset var oServiceBuilder = createObject("java", "java.lang.Object") />
 		<cfset var oWebDriverService = createObject("java", "java.lang.Object") />
 		<cfset var sPathToBIN = sPathToBIN = replace("#expandPath('/DriverBins')#\\#stBrowserData.nameOfBinary#", "\", "\\") />
+
+		<cfif isObject(oJavaLoader) >
+			<cfset oServiceBuilder = oJavaLoader.create("org.openqa.selenium.#lCase(arguments.browser)#.#stBrowserData.serviceJarName#$Builder") />
+		<cfelse>
+			<cfset oServiceBuilder = createObject("java", "org.openqa.selenium.#lCase(arguments.browser)#.#stBrowserData.serviceJarName#$Builder") />
+		</cfif>
 
 		<cfif structKeyExists(arguments, "pathToWebDriverBIN") >
 			<cfif verifyFilePath(arguments.pathToWebDriverBIN) IS false >
@@ -288,10 +330,10 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfset oServiceBuilder.usingDriverExecutable( createObject("java", "java.io.File").init(sPathToBIN) ) />
 		<cfset oWebDriverService = oServiceBuilder.Build() />
 
-		<cfif isObject(oWebDriverService) AND isInstanceOf(oWebDriverService, "org.openqa.selenium.#lCase(arguments.browser)#.#stBrowserData.serviceJarName#") >
+		<cfif isObject(oWebDriverService) >
 			<cfreturn oWebDriverService />
 		<cfelse>
-			<cfthrow message="Error while creating browser" detail="Something we can't indentify or catch went wrong with building the webdriver service. The service builder did not return an instance of 'org.openqa.selenium.remote.service.DriverService'." />
+			<cfthrow message="Error while creating browser" detail="Something we can't indentify or catch went wrong with building the webdriver service. The service builder did not return an object." />
 		</cfif>
 	</cffunction>
 
