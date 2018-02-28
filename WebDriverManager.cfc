@@ -250,17 +250,18 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 					) />
 				</cfif>
 				
-			<cfcatch type="org.openqa.selenium.remote.UnreachableBrowserException" >
-				<cfthrow message="Error while creating browser" detail="Could not create a RemoteWebDriver instance. The server address and port likely couldn't be reached. You passed 'RemoteServerAddress' as: #arguments.RemoteServerAddress#" />
+			<cfcatch>
+				<cfif cfcatch.type IS "org.openqa.selenium.remote.UnreachableBrowserException" >
+					<cfthrow message="Error while creating browser" detail="Could not create a RemoteWebDriver instance. The server address and port likely couldn't be reached. You passed 'RemoteServerAddress' as: #arguments.RemoteServerAddress#" />
+				</cfif>
+
+				<cfif cfcatch.type IS "org.openqa.selenium.WebDriverException" AND structKeyExists(cfcatch, "message") AND FindNoCase("The requested URL /session was not found on this server", cfcatch.message) GT 0 >
+					<cfthrow message="Error while creating browser" detail="Could not create a RemoteWebDriver instance. The remote address is reachable, but is not responding. Likely the port is missing, not open or not correct. You passed 'RemoteServerAddress' as: #arguments.RemoteServerAddress#" />
+				</cfif>
+
+				<cfrethrow/>
 			</cfcatch>
 
-			<cfcatch type="org.openqa.selenium.WebDriverException" >
-				<cfif structKeyExists(cfcatch, "message") AND FindNoCase("The requested URL /session was not found on this server", cfcatch.message) GT 0 >
-					<cfthrow message="Error while creating browser" detail="Could not create a RemoteWebDriver instance. The remote address is reachable, but is not responding. Likely the port is missing, not open or not correct. You passed 'RemoteServerAddress' as: #arguments.RemoteServerAddress#" />
-				<cfelse>
-					<cfthrow object="#cfcatch#" />
-				</cfif>
-			</cfcatch>
 			</cftry>
 		<cfelse>
 			<cfif arguments.browser IS "Firefox" >

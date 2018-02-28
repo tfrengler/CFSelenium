@@ -4,45 +4,64 @@
 	<cfset oWrappedBrowser = "" />
 	<cfset oJavaWebElement = createObject("java", "java.lang.Object") />
 	<cfset oSelectInterface = "" />
+	<cfset oLocator = structNew() />
+
+	<!--- CONSTRUCTOR --->
 
 	<cffunction name="init" returntype="Components.Element" access="public" hint="Constructor" >
-		<cfargument name="webElementReference" type="any" required="true" />
-		<cfargument name="browserReference" type="Components.Browser" required="false" />
-		<cfargument name="javaLoaderReference" type="any" required="false" />
+		<cfargument name="webElementReference" type="any" required="true" hint="A reference to the Java remote.RemoteWebElement-class." />
+		<cfargument name="locatorReference" type="Components.Locator" required="false" hint="A reference to the Locator-instance that was used to find this element." />
+		<cfargument name="browserReference" type="Components.Browser" required="true" hint="A reference to the Browser-instance that was used to fetch this element." />
+		<cfargument name="javaLoaderReference" type="any" required="false" hint="A reference to Mark Mandel's Javaloader-component." />
 
 		<cfset var oSelectInterface = "" />
 		<cfset var stSelectInterfaceArguments = structNew() />
+		
 		<cfset stSelectInterfaceArguments.webElementReference = arguments.webElementReference />
+		<cfset stSelectInterfaceArguments.browserReference = arguments.browserReference />
+		<cfset setJavaWebElement(data=arguments.webElementReference) />
 
-		<cfset setJavaWebElement( WebElementReference=arguments.webElementReference ) />
-		<cfif structKeyExists(arguments, "browserReference") >
-			<cfset variables.oWrappedBrowser = arguments.browserReference />
+		<cfif structKeyExists(arguments, "locatorReference") >
+			<cfset setLocator(data=arguments.locatorReference) />
 		</cfif>
+		<cfset setWrappedBrowser(data=arguments.browserReference) />
 
 		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
 			<cfset stSelectInterfaceArguments.javaLoaderReference = arguments.javaLoaderReference />
 		</cfif>
 
 		<cfif isSelectTag() >
-			<cfset oSelectInterface = createObject("component", "Components.SelectElement").init( argumentCollection = stSelectInterfaceArguments ) />
-			<cfset setSelectInterface( selectInterfaceReference=oSelectInterface ) />
+			<cfset oSelectInterface = createObject("component", "Components.SelectElement").init(
+				argumentCollection = stSelectInterfaceArguments
+			) />
+			<cfset setSelectInterface(data=oSelectInterface) />
 		</cfif>
 
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="setJavaWebElement" returntype="void" access="private" hint="" >
-		<cfargument name="webElementReference" type="any" required="true" />
+	<!--- PRIVATE METHODS --->
 
-		<cfif isObject(arguments.webElementReference) IS false >
-			<cfthrow message="Error setting Selenium's Java WebElement" detail="Argument 'WebElementReference' is not an object" />
+	<cffunction name="setJavaWebElement" returntype="void" access="private" hint="" >
+		<cfargument name="data" type="any" required="true" />
+
+		<cfif isObject(arguments.data) IS false >
+			<cfthrow message="Error setting Java WebElement" detail="Argument 'data' is not an object" />
 		</cfif>
 
-		<cfset oJavaWebElement = arguments.webElementReference />
+		<cfset variables.oJavaWebElement = arguments.data />
 	</cffunction>
 
-	<cffunction name="getJavaWebElement" returntype="any" access="public" hint="Returns a reference to the Selenium Java WebElement-class that this component is wrapped around." >
-		<cfreturn variables.oJavaWebElement />
+	<cffunction name="setLocator" returntype="void" access="private" hint="" >
+		<cfargument name="data" type="Components.Locator" required="true" />
+
+		<cfset variables.oLocator = arguments.data />
+	</cffunction>
+
+	<cffunction name="setWrappedBrowser" returntype="void" access="private" hint="" >
+		<cfargument name="data" type="Components.Browser" required="true" />
+
+		<cfset variables.oWrappedBrowser = arguments.data />
 	</cffunction>
 
 	<cffunction name="getWrappedBrowser" returntype="Components.Browser" access="private" hint="Returns a reference to the Browser-instance that created this element." >
@@ -50,9 +69,19 @@
 	</cffunction>
 
 	<cffunction name="setSelectInterface" returntype="void" access="private" hint="" >
-		<cfargument name="selectInterfaceReference" type="Components.SelectElement" required="true" />
+		<cfargument name="data" type="Components.SelectElement" required="true" />
 
-		<cfset variables.oSelectInterface = arguments.selectInterfaceReference />
+		<cfset variables.oSelectInterface = arguments.data />
+	</cffunction>
+
+	<!--- PUBLIC METHODS --->
+
+	<cffunction name="getLocator" returntype="Components.Locator" access="public" hint="Returns a reference to the Locator-instance that was used to fetch this element." >
+		<cfreturn variables.oLocator />
+	</cffunction>
+
+	<cffunction name="getJavaWebElement" returntype="any" access="public" hint="Returns a reference to the Java remote.RemoteWebElement-class that this component is wrapped around." >
+		<cfreturn variables.oJavaWebElement />
 	</cffunction>
 
 	<cffunction name="getId" returntype="string" access="public" hint="Returns the ID-attribute of this element." >
@@ -71,7 +100,7 @@
 		<cfreturn getJavaWebElement().getAttribute("name") />
 	</cffunction>
 
-	<cffunction name="isSelectTag" returntype="boolean" access="public" hint="" >
+	<cffunction name="isSelectTag" returntype="boolean" access="public" hint="Use to determine whether this is a select-tag or not." >
 		<cfset var sElementType = getJavaWebElement().getTagName() />
 
 		<cfif sElementType EQ "select" >
@@ -81,7 +110,7 @@
 		</cfif>
 	</cffunction>
 
-	<cffunction name="getTextContent" returntype="string" access="public" hint="Returns the textContent-attribute of this element. That means all the visible, inner text without any of the nested HTML-tags wrapped around them or their attributes. Example: <span>Hello <span style='display: none;'>World</span></span> would return 'Hello world'." >
+	<cffunction name="getTextContent" returntype="string" access="public" hint="Returns the textContent-attribute of this element. Note that this is not supported IE8 and below! Textconent means all the visible, inner text without any of the nested HTML-tags wrapped around them or their attributes. Example: calling this on the outer span of this: <span>Hello <span style='display: none;'>World</span></span> - would return 'Hello world'." >
 		<cfreturn trim(getJavaWebElement().getAttribute("textContent")) /> <!--- Only works in IE9+ --->
 	</cffunction>
 
@@ -107,13 +136,13 @@
 		<cfset var sAttributeValue = "" />
 
 		<cfif len(arguments.name) IS 0 OR arguments.name IS " " >
-			<cfthrow message="Error fetching attribute value of element" detail="The attribute name you passed in argument 'Name' is blank." />
+			<cfthrow message="Error fetching attribute value of element" detail="The attribute name you passed in argument 'name' is blank." />
 		</cfif>
 
 		<cfset sAttributeValue = getJavaWebElement().getAttribute( arguments.name ) />
 
 		<!--- Selenium returns null for any attributes or properties that are not defined or false boolean values which in turn makes our variable undefined --->
-		<cfif isDefined("sAttributeValue") >
+		<cfif isDefined("sAttributeValue") AND len(sAttributeValue) GT 0 >
 			<cfreturn sAttributeValue />
 		<cfelse>
 			<cfreturn "" />
@@ -162,33 +191,36 @@
 			</cfif>
 			<cfset getJavaWebElement().sendKeys(arguments.text) />
 
-			<cfcatch type="org.openqa.selenium.ElementNotVisibleException" >
-				<cfthrow message="Error when writing in element" detail="Can't write in the element because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
-			</cfcatch>
+			<cfcatch>
+				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" >
+					<cfthrow message="Error when writing in element" detail="Can't write in the element because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				</cfif>
 
-			<cfcatch type="org.openqa.selenium.InvalidElementStateException" >
-				<cfthrow message="Error when writing in element" detail="Can't write in the element, likely because it's disabled, obscured or not a type of element you can type text in. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				<cfif cfcatch.type IS "org.openqa.selenium.InvalidElementStateException" >
+					<cfthrow message="Error when writing in element" detail="Can't write in the element, likely because it's disabled, obscured or not a type of element you can type text in. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				</cfif>
+
+				<cfrethrow/>
 			</cfcatch>
 		</cftry>
 	</cffunction>
 
 	<cffunction name="click" returntype="void" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0." >
-		<cfset sleep(200) />
+		<cfset sleep(50) />
 		<cftry>
 			<cfset getJavaWebElement().click() />
 
-			<cfcatch type="org.openqa.selenium.ElementNotVisibleException" >
-				<cfthrow message="Error when clicking on element" detail="Can't click on the element because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
-			</cfcatch>
-
-			<cfcatch type="org.openqa.selenium.WebDriverException" >
-				<cfif findNoCase("is not clickable at point (", cfcatch.message) GT 0 >
-					<cfthrow message="Error when clicking on element" detail="Can't click on the element. Likely because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
-				<cfelse>
-					<cfthrow object="#cfcatch#" />
+			<cfcatch>
+				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" >
+					<cfthrow message="Error when clicking on element" detail="Can't click on the element because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
 				</cfif>
+
+				<cfif cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("is not clickable at point (", cfcatch.message) GT 0 >
+					<cfthrow message="Error when clicking on element" detail="Can't click on the element. Likely because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				</cfif>
+
+				<cfrethrow/>
 			</cfcatch>
-			
 		</cftry>
 	</cffunction>
 
@@ -196,12 +228,16 @@
 		<cfset getJavaWebElement().clear() />
 	</cffunction>
 
-	<cffunction name="submitForm" returntype="void" access="public" hint="If this element is a form, or an element within a form, then this will be submitted" >
+	<cffunction name="submitForm" returntype="void" access="public" hint="If this element is a form, or an element within a form, then the form will be submitted. NOTE: This circumvents any eventhandlers that are attached to the submit-button!" >
 		<cftry>
 			<cfset getJavaWebElement().submit() />
 
-			<cfcatch type="org.openqa.selenium.NoSuchElementException" >
-				<cfthrow message="Form submission failed" detail="The element you called submitForm() on is not part of a form. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+			<cfcatch >
+				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
+					<cfthrow message="Form submission failed" detail="The element you called submitForm() on is not part of a form. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				</cfif>
+
+				<cfrethrow/>
 			</cfcatch>
 		</cftry>
 	</cffunction>
@@ -212,69 +248,150 @@
 			<cfthrow message="Error getting select-tag interface" detail="You can't use select-methods on this element because it's not a select-tag. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
 		</cfif>
 
-		<cfreturn oSelectInterface />
+		<cfreturn variables.oSelectInterface />
 	</cffunction>
 
-	<cffunction name="getElement" returntype="any" access="public" hint="Returns one or more elements that matches your search criteria, that are nested within this element. This method will throw an error if NO elements are found when searching for single element." >
-		<cfargument name="searchFor" type="string" required="true" hint="The search string to locate the element by. Can be an id, tag-name, class name, xpath, css selector etc" />
-		<cfargument name="locateUsing" type="array" required="false" default="#arrayNew(1)#" hint="The name(s) of the Selenium locator mechanisms to use. Use this to force using specific mechanism(s). If not passed then it will loop through them in sequence. Valid locators: id,cssSelector,xpath,name,className,linkText,partialLinkText,tagName,javascript" />
-		<cfargument name="locateHiddenElements" type="boolean" required="false" default="false" hint="Use this to determine whether to return only elements that are considered visible or not." />
+	<cffunction name="getElement" returntype="any" access="public" hint="Returns either the FIRST element or an array of ALL elements that matches your locator, which are nested within this element. This method will throw an error if NO elements are found when searching for single element." >
+		<cfargument name="locator" type="Components.Locator" required="true" hint="An instance of the locator mechanism you want to use to search for the elements" />
+		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#getWrappedBrowser().getFetchHiddenElements()#" hint="Use this to determine whether to return only elements that are considered visible or not." />
 		<cfargument name="multiple" type="boolean" required="false" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
-		<cfset var ReturnData = "" />
-		<cfset var stGetElementsArguments = {
-			searchFor=arguments.searchFor,
-			locateUsing=arguments.locateUsing,
-			locateHiddenElements=arguments.locateHiddenElements,
-			searchContext=getJavaWebElement()
-		} />
+		<cfset var stGetElementsArguments = arguments />
+		<cfset stGetElementsArguments.searchContext = getJavaWebElement() />
 
-		<cfif arguments.multiple > 
-			<cfset ReturnData = oWrappedBrowser.getElements(argumentCollection = stGetElementsArguments) />
-		<cfelse>
-			<cfset ReturnData = oWrappedBrowser.getElement(argumentCollection = stGetElementsArguments) />
-		</cfif>
-
-		<cfreturn ReturnData />
+		<cfreturn getWrappedBrowser().getElement(argumentCollection = stGetElementsArguments) />
 	</cffunction>
 
 	<cffunction name="getParentElement" returntype="Components.Element" access="public" hint="" >
 
-		<cfreturn getWrappedBrowser().getElement(
-			searchFor="return arguments[0].parentElement",
-			locateUsing=["javascript"],
-			javascriptArguments=[getJavaWebElement()]
+		<cfset var oLocator = "" />
+		<cfset var stLocatorArguments = structNew() />
+
+		<cfset stLocatorArguments.searchFor = "return arguments[0].parentElement" />
+		<cfset stLocatorArguments.locateUsing = "javascript" />
+		<cfset stLocatorArguments.javascriptArguments = [getJavaWebElement()] />
+
+		<cfset oLocator = getWrappedBrowser().createLocator(
+			argumentCollection = stLocatorArguments
 		) />
+
+		<cfreturn getWrappedBrowser().getElement(locator=oLocator) />
 
 	</cffunction>
 
 	<cffunction name="getPreviousSiblingElement" returntype="Components.Element" access="public" hint="" >
 
-		<cfreturn getWrappedBrowser().getElement(
-			searchFor="return arguments[0].previousElementSibling",
-			locateUsing=["javascript"],
-			javascriptArguments=[getJavaWebElement()]
+		<cfset var oLocator = "" />
+
+		<cfset oLocator = getWrappedBrowser().createLocator(
+			searchFor = "return arguments[0].previousElementSibling",
+			locateUsing = "javascript",
+			javascriptArguments = [getJavaWebElement()]
 		) />
+
+		<cftry>
+			<cfreturn getWrappedBrowser().getElement(locator=oLocator) />
+
+			<cfcatch>
+				<cfif find("Unable to find HTML-element", cfcatch.detail) GT 0 >
+					<cfthrow message="Error getting previous sibling element" detail="This element does not have a previous sibling. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				<cfelse>
+					<cfrethrow/>
+				</cfif>
+			</cfcatch>
+		</cftry>
 
 	</cffunction>
 
 	<cffunction name="getNextSiblingElement" returntype="Components.Element" access="public" hint="" >
 
-		<cfreturn getWrappedBrowser().getElement(
-			searchFor="return arguments[0].nextElementSibling",
-			locateUsing=["javascript"],
-			javascriptArguments=[getJavaWebElement()]
+		<cfset var oLocator = "" />
+
+		<cfset oLocator = getWrappedBrowser().createLocator(
+			searchFor = "return arguments[0].nextElementSibling",
+			locateUsing = "javascript",
+			javascriptArguments = [getJavaWebElement()]
 		) />
+
+		<cftry>
+			<cfreturn getWrappedBrowser().getElement(locator=oLocator) />
+
+			<cfcatch>
+				<cfif find("Unable to find HTML-element", cfcatch.detail) GT 0 >
+					<cfthrow message="Error getting next sibling element" detail="This element does not have a next sibling. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				<cfelse>
+					<cfrethrow/>
+				</cfif>
+			</cfcatch>
+		</cftry>
 
 	</cffunction>
 
 	<cffunction name="getChildElements" returntype="array" access="public" hint="" >
 
-		<cfreturn getWrappedBrowser().getElements(
-			searchFor="return arguments[0].children",
-			locateUsing=["javascript"],
-			javascriptArguments=[getJavaWebElement()]
+		<cfset var oLocator = "" />
+		<cfset var aReturnData = arrayNew(1) />
+
+		<cfset oLocator = getWrappedBrowser().createLocator(
+			searchFor = "return arguments[0].children",
+			locateUsing = "javascript",
+			javascriptArguments = [getJavaWebElement()]
 		) />
+
+		<cfset aReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+
+		<cfif arrayLen(aReturnData) IS 0 >
+			<cfthrow message="Error getting child elements" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+		</cfif>
+
+		<cfreturn aReturnData />
+	</cffunction>
+
+	<cffunction name="getFirstChildElement" returntype="Components.Element" access="public" hint="" >
+
+		<cfset var oLocator = "" />
+
+		<cfset oLocator = getWrappedBrowser().createLocator(
+			searchFor = "return arguments[0].firstElementChild",
+			locateUsing = "javascript",
+			javascriptArguments = [getJavaWebElement()]
+		) />
+
+		<cftry>
+			<cfreturn getWrappedBrowser().getElement(locator=oLocator) />
+
+			<cfcatch>
+				<cfif find("Unable to find HTML-element", cfcatch.detail) GT 0 >
+					<cfthrow message="Error getting first child element" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				<cfelse>
+					<cfrethrow/>
+				</cfif>
+			</cfcatch>
+		</cftry>
+
+	</cffunction>
+
+	<cffunction name="getLastChildElement" returntype="Components.Element" access="public" hint="" >
+
+		<cfset var oLocator = "" />
+
+		<cfset oLocator = getWrappedBrowser().createLocator(
+			searchFor = "return arguments[0].lastElementChild",
+			locateUsing = "javascript",
+			javascriptArguments = [getJavaWebElement()]
+		) />
+
+		<cftry>
+			<cfreturn getWrappedBrowser().getElement(locator=oLocator) />
+
+			<cfcatch>
+				<cfif find("Unable to find HTML-element", cfcatch.detail) GT 0 >
+					<cfthrow message="Error getting last child element" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()#" />
+				<cfelse>
+					<cfrethrow/>
+				</cfif>
+			</cfcatch>
+		</cftry>
 
 	</cffunction>
 
