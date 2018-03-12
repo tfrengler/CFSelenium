@@ -1,6 +1,8 @@
 # CFSelenium
 A Selenium framework for Coldfusion utilising the native Java-bindings
 
+**NOTE: The documentation is out of date! A recent major update changed a lot of things, but I still haven't had time to update this**
+
 This framework aims to do the pretty much the same as teamcfadvance's CFSelenium: provide a native client library for the Selenium WebDriver that allows you to write tests, using CFML, which will drive a browser and allow you to interact with the page and elements.
 
 I don't claim this is better by any means. Simply consider it an alternative.
