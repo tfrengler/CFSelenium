@@ -1,8 +1,6 @@
 # CFSelenium
 A Selenium framework for Coldfusion utilising the native Java-bindings
 
-**NOTE: The documentation is out of date! A recent major update changed a lot of things, but I still haven't had time to update this**
-
 This framework aims to do the pretty much the same as teamcfadvance's CFSelenium: provide a native client library for the Selenium WebDriver that allows you to write tests, using CFML, which will drive a browser and allow you to interact with the page and elements.
 
 I don't claim this is better by any means. Simply consider it an alternative.
@@ -115,27 +113,61 @@ Inside **Browser.cfc** are the methods for interacting with the browser:
 
 As mentioned above the magic of grabbing and interacting with elements happens inside **Browser.cfc**. Here you have two choices:
 
-**1:** Use **getElement()** or **getElements()**, which allows you the most specific control over how to target elements or...
+**1:** Use **getElement()** or which allows you the most specific control over how to target elements or...
 
 **2:** Use **getElementBy()** which is an interface for **ElementLocator.cfc** that has easy to use methods for grabbing elements by the most common means, such as ID, class, name, value etc.
 
-getElement() and getElements() structure are identical. The only difference is that the former retrieves a single element whereas the latter returns an array. The syntax is:
+The syntax is:
 ```
-<cfset AnElement = Browser.getElement()
-	searchFor="[name='test']"
-	locateUsing=["cssSelector"]
-	locateHiddenElements=false
-	javascriptArguments=[]
-/ >
+<cfset AnElement = Browser.getElement(
+	locator=MyLocator,
+	locateHiddenElements=false,
+	multiple=false
+)/ >
 ```
 Broken down the arguments are:
 
-- **searchFor (string):** The search string to locate the element by. Can be an id, tag-name, class name, xpath, css selector etc
-- **locateUsing (array):** The name(s) of the Selenium locator mechanisms to use. Use this to force using specific mechanism(s). If not passed then it will loop through them in sequence. Valid locators: id,cssSelector,xpath,name,className,linkText,partialLinkText,tagName,javascript.
+- **locator (instanceOf Locator.cfc):** An instance of Locator.cfc which encapsulates the mechanism you want to use to fetch an element (more on that in a moment).
 - **locateHiddenElements (boolean):** Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible.
-- **javascriptArguments (array):** Used only locateUsing uses "javascript". Script arguments must be a number, a boolean, a string, WebElement, or an array of any of those combinations. The arguments will be made available to the JavaScript via the 'arguments' variable.
+- **multiple (boolean):** Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found.
 
-**getElementBy()** is for the most part what you'd use unless you want advanced control over what you're searching for. It contains methods such as:
+The mechanism needed to tell getElement() what to fetch and how is the Locator.cfc I just mentioned above. Browser contains a method for spawning locators, which works like this:
+
+```
+<cfset MyLocator = Browser.createLocator(
+	searchFor="input[name='CreditcardNumber']",
+	locateUsing="cssSelector"
+)/ >
+```
+The arguments for this are:
+
+- **searchFor (string):** The string you want to search for.
+- **locateUsing (string):** The locator mechanism you want to use to find the element(s). Valid locators are: id,cssSelector,xpath,name,className,linkText,partialLinkText,tagName,javascript.
+- **javascriptArguments (array):** Arguments for the javascript locator. Script arguments must be a number, a boolean, a string, RemoteWebElement, or an array of any of those combinations.
+
+So you'd use these two together like such:
+```
+<cfset MyLocator = Browser.createLocator(
+	searchFor="input[name='CreditcardNumber']",
+	locateUsing="cssSelector"
+)/ >
+
+<cfset AnElement = Browser.getElement(
+	locator=MyLocator,
+	locateHiddenElements=false,
+	multiple=false
+)/ >
+
+OR INLINE:
+
+<cfset AnElement = Browser.getElement()
+	locator=Browser.createLocator(searchFor="input[name='CreditcardNumber']", locateUsing="cssSelector"),
+	locateHiddenElements=false,
+	multiple=false
+/ >
+```
+
+There's another way to grab elements which is called **getElementBy()** and may for the most part what you'd use, unless you desire advanced control over what you're searching for. It creates the locators that it uses itself, meaning less code for you to achieve the same effect! It contains methods such as:
 
 - title()
 - id()
@@ -162,6 +194,24 @@ Broken down the arguments are:
 - **name (string):**  The name of the element you want to search for.
 - **onlyElementsOfTag (string):** Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain name, rather than any element.
 - **multiple (boolean):** Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found.
+
+The **attributeXXX**-methods all have these parameters in common:
+
+- **attribute (string):** The name of the attribute you want to search for.
+- **value (string):** The value of the attribute you want to search for.
+
+An example use would be this:
+```
+<cfset SomeElements = Browser.getElementBy().attributeStartsWith(
+	attribute="value",
+	value="Password",
+	onlyElementsOfTag="input",
+	multiple=true
+) />
+```
+Aside from **onlyElementsOfTag** and **multiple** which they all have in common, there's also **getLocator**. 
+So calling **getElementBy().name()** or **.getElementBy().attributeStartsWith()** as we did above but adding **getLocator=true** we'd instead get an instance of Locator.cfc with the mechanism that would be used to fetch that element.
+It can be useful to retrieve the locator, rather than the element, as there are Selenium methods that use element locators for certain things, such as conditions.
 
 **INTERACTING WITH ELEMENTS**
 
