@@ -111,7 +111,13 @@
 	</cffunction>
 
 	<cffunction name="getTextContent" returntype="string" access="public" hint="Returns the textContent-attribute of this element. Note that this is not supported IE8 and below! Textconent means all the visible, inner text without any of the nested HTML-tags wrapped around them or their attributes. Example: calling this on the outer span of this: <span>Hello <span style='display: none;'>World</span></span> - would return 'Hello world'." >
-		<cfreturn trim(getJavaWebElement().getAttribute("textContent")) /> <!--- Only works in IE9+ --->
+		<cfset var sRawTextContent = getJavaWebElement().getAttribute("textContent") /> <!--- Only works in IE9+ --->
+		<cfset var sCleanedReturnData = "" />
+		<!--- The inner contents of our elements are often littered with extra spaces, carriage returns, tabs and newlines --->
+		<cfset sCleanedReturnData = reReplace(sRawTextContent, "[\t\n\r]", "", "ALL") />
+		<cfset sCleanedReturnData = replace(sCleanedReturnData, chr(160), "", "ALL") /> <!--- &nbsp; --->
+
+		<cfreturn trim(sCleanedReturnData) />
 	</cffunction>
 
 	<cffunction name="getHTMLContent" returntype="string" access="public" hint="Returns the inner, nested HTML and their contents of this element." >

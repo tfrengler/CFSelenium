@@ -146,7 +146,11 @@
 
 	<cffunction name="selectByIndex" returntype="void" access="public" hint="Select the option at the given index. This is done by examining the 'index' attribute of an element, and not merely by counting." >
 		<cfargument name="index" type="numeric" required="true" hint="The index number of the option you want to select. Note that the indexes start from 0" />
-		
+
+		<cfif variables.getNumberOfOptions() IS 0 OR (variables.getNumberOfOptions() IS 1 AND len(variables.getAllOptions()[1].getTextContent()) IS 0 ) >
+			<cfthrow  message="Error selecting by index" detail="Can't select option by index value as there are no proper options in this select-tag" />
+		</cfif>
+
 		<cftry>
 			<cfset getJavaSelectInterface().selectByIndex(arguments.index) />
 
@@ -190,7 +194,7 @@
 		</cftry>
 	</cffunction>
 
-	<cffunction name="deselectByValue" returntype="void" access="public" hint="Deselect all options that have a value matching the argument. That is, when given 'foo' this would deselect an option like: <option value='foo'>Bar</option>" >
+	<cffunction name="deselectByValue" returntype="void" access="public" hint="Deselect all options that have a value matching the argument. That is, when given 'foo' this would deselect an option like: <option value='foo'>Bar</option>. Only relevant for multiple-select enabled select-tags. Will throw an exception if it is not." >
 		<cfargument name="value" type="string" required="true" hint="The value in text of the option you want to de-select" />
 
 		<cfif getJavaSelectInterface().isMultiple() IS false >
@@ -210,11 +214,15 @@
 		</cftry>
 	</cffunction>
 
-	<cffunction name="deselectByIndex" returntype="void" access="public" hint="De-select the option at the given index. This is done by examining the 'index' attribute of an element, and not merely by counting." >
+	<cffunction name="deselectByIndex" returntype="void" access="public" hint="De-select the option at the given index. This is done by examining the 'index' attribute of an element, and not merely by counting. Only relevant for multiple-select enabled select-tags. Will throw an exception if it is not." >
 		<cfargument name="index" type="numeric" required="true" hint="The index number of the option you want to de-select. Note that the indexes start from 0" />
 
 		<cfif getJavaSelectInterface().isMultiple() IS false >
 			<cfthrow message="Error deselecting by index" detail="Can't de-select option by index in this select tag because it's not multi-select enabled." />
+		</cfif>
+
+		<cfif variables.getNumberOfOptions() IS 0 >
+			<cfthrow  message="Error de-selecting by index" detail="Can't de-select option by index value as there are no options in this select-tag" />
 		</cfif>
 		
 		<cftry>

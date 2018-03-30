@@ -157,7 +157,7 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfset var oBrowser = "" />
 		<cfset var stBrowserData = getBrowserData(arguments.browser) />
 		<cfset var oBrowserCapabilities = createObject("java", "java.lang.Object") />
-		<cfset var sPathToBIN = replace("#expandPath('/DriverBins')#\\#stBrowserData.nameOfBinary#", "\", "\\") />
+		<cfset var sPathToBIN = reReplace("#application.mapping.DriverBins##stBrowserData.nameOfBinary#", "[/|\\]", "\\", "ALL") />
 		<cfset var oBrowserDesiredCapabilities = createObject("java", "java.lang.Object") />
 		<cfset var oBrowserOptions = createObject("java", "java.lang.Object") />
 		<cfset var stBrowserArguments = structNew() />
@@ -295,7 +295,7 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfset var stBrowserData = getBrowserData(arguments.browser) />
 		<cfset var oServiceBuilder = createObject("java", "java.lang.Object") />
 		<cfset var oWebDriverService = createObject("java", "java.lang.Object") />
-		<cfset var sPathToBIN = sPathToBIN = replace("#expandPath('/DriverBins')#\\#stBrowserData.nameOfBinary#", "\", "\\") />
+		<cfset var sPathToBIN = reReplace("#application.mapping.DriverBins##stBrowserData.nameOfBinary#", "[/|\\]", "\\", "ALL") />
 
 		<cfif isObject(oJavaLoader) >
 			<cfset oServiceBuilder = oJavaLoader.create("org.openqa.selenium.#lCase(arguments.browser)#.#stBrowserData.serviceJarName#$Builder") />
