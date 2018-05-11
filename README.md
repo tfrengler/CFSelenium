@@ -3,13 +3,13 @@ A Selenium framework for Coldfusion utilising the native Java-bindings
 
 This framework aims to do the pretty much the same as teamcfadvance's CFSelenium: provide a native client library for the Selenium WebDriver that allows you to write tests, using CFML, which will drive a browser and allow you to interact with the page and elements.
 
-I don't claim this is better by any means. Simply consider it an alternative.
+I don't claim this is better; in fact it's approach is quite different so I recommend you check out both.
 
 **LICENSE**
 
 MIT License
 
-Copyright (c) 2017 Thomas Grud Frengler
+Copyright (c) 2018 Thomas Grud Frengler
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,9 @@ SOFTWARE.
 **ORIGINS:**
 
 The project originally came about when my company decided to switch from our old test Javascript framework to using Selenium. 
-teamcfadvance's CFSelenium was sadly not in a working state at that point and with no alternatives (and no time to waste), the only other
-option for me was to create my own framework from scratch, based on the native Java-bindings for Selenium.
+teamcfadvance's CFSelenium was sadly not in a working state at that point and with no alternatives (and no time to waste), the only other option for me was to create my own framework from scratch, based on the native Java-bindings for Selenium.
 
-I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will not be extended according to feedback, but I will try to fix outright errors. Since it was primarily created to fit our way of working within our organization it may very well not be to everyone's liking. Take it or leave it basically.
+I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will most likely not be extended according to feedback, but I will try to fix outright errors. Since it was primarily created to fit our way of working within our organization it may very well not be to everyone's liking. Take it or leave it basically.
 
 **REQUIREMENTS**
 
@@ -43,13 +42,9 @@ As far as I am aware it will work with Lucee all the way down to 4.5.
 For Adobe Coldfusion you'll need atleast 10+ although I am not 100% sure.
 I developed this against Adobe Coldfusion 2016 and I have not paid special attention to what newer features I've used.
 
-As far as folder structure goes there are two requirements: 
+As far as folder structure goes there is but one requirement: 
 
 **1:** All the CFCs from here are in a subfolder directly under the Application-root called **Components**.
-
-**2:** The webdriver binaries for running Selenium locally must be in a subfolder directly under the Application-root called **WebdriverBins**.
-
-The reason for the mappings requirement is simple: I struggled with trying to maintain two separate versions of the code (for work and for public use here on GitHub) so all the code is straight from my work versions. Sorry about that. You'll have to fork and/or edit the code yourself if you want to get rid of the reliance on my mappings.
 
 **SETTING UP - SELENIUM'S JAR FILES**
 
@@ -291,13 +286,15 @@ Here's an example from one of my scripts at work so you can see the flow. It use
 ```
 **WHAT TO EXPECT (AND NOT EXPECT):**
 
-Don't come expecting a framework that will suit all your needs and covers all of Selenium's features. Don't get me wrong: it works and does what it does well but it's developed and maintained by just me, and its development is driven by our needs. But I urge you to to download it, modify, change and extend it as much as possible or just use it as research to figure out how to pull it off yourself.
+Don't expect a framework that will suit all your needs and covers all of Selenium's features. It's developed and maintained by just me, and its development is driven by my company's needs. You can always modify, change and extend it as much as possible or just use it as research to figure out how to pull it off yourself.
 
-In general most of the Java interactions are abstracted away and you'll be doing all your calls to Coldfusion objects and code. As mentioned already I have made public methods that can get you the original Java object so that you'll still be able to access all the original Selenium functions directly. I have wrapped the most commonly used Selenium methods and added my own original methods for things that I find handy. More of these will likely be added as I write tests and use the framework.
+The biggest difference between this and teamcfadvance's CFSelenium is that theirs is really a barebones factory for initializing Selenium. It's awesome if you crave completely control and offers the most flexibility. It comes with the overhead of you having to build a framework around it yourself if you want more than interact with the raw Java-methods. My framework on the other hand locks you into using it my way, so if you don't want that this might not be for you.
 
-The framework as I present it here it also completely stand-alone. This means I built no support in for reporters, testrunners, or any kind of known (or unknown) test harnesses or frameworks of any kind. To do that would have been too much for me. You'd have to build that kind of hook yourself.
+In general most of the Java interactions are abstracted away and you'll be doing all your calls to Coldfusion objects and code. As mentioned already I have made public methods that can get you the original Java object so that you'll still be able to access all the original Selenium functions directly. I have wrapped the most commonly used Selenium methods and added my own original methods for things that I find handy.
 
-There's a copious amount of type checking and error handling because that's one of my personal bugbears. Also the framework is liberal about using throws and custom exceptions when it hits conditions that are considered bad. My aim was to abstract away some of the frankly quite esoteric errors that Selenium occasionally throws and give you clear, concise information about what went wrong so you can easily find and fix it. Also given the serial from-A-to-B nature of tests in general, plus the fact that automation is usually hands- and eyes off, I felt it good practice to have the framework throw hard errors when something isn't right, rather than just continuing.
+The framework as I present it here it also completely stand-alone. This means I built no support for plugging in reporters, testrunners, or any kind of known (or unknown) test harnesses or frameworks of any kind. That's completely out of scope of what I wanted; you'd have to build that kind of hook yourself.
+
+There's a copious amount of type checking and error handling because that's one of my personal bugbears. Also the framework is liberal about using throws and custom exceptions when it hits conditions that are considered bad. My aim was to abstract away some of the frankly quite esoteric errors that Selenium occasionally throws and give you clear, concise information about what went wrong so you can easily find and fix it.
 
 **NOTES/TROUBLESHOOTING:**
 
