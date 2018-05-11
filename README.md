@@ -298,7 +298,7 @@ There's a copious amount of type checking and error handling because that's one 
 
 **NOTES/TROUBLESHOOTING:**
 
-No outstanding issues that I know of.
+There's some hardcoded references in WebDriverManager.cfc to the webdriver binaries that point to the application-scope. I plan to get rid of this soon.
 
 **CONTACT AND FEEDBACK:**
 
