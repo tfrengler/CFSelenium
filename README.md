@@ -296,9 +296,9 @@ The framework as I present it here it also completely stand-alone. This means I 
 
 There's a copious amount of type checking and error handling because that's one of my personal bugbears. Also the framework is liberal about using throws and custom exceptions when it hits conditions that are considered bad. My aim was to abstract away some of the frankly quite esoteric errors that Selenium occasionally throws and give you clear, concise information about what went wrong so you can easily find and fix it.
 
-**NOTES/TROUBLESHOOTING:**
+**NOTES/TROUBLESHOOTING/KNOWN ISSUES:**
 
-There's some hardcoded references in WebDriverManager.cfc to the webdriver binaries that point to the application-scope. I plan to get rid of this soon.
+None that I know of
 
 **CONTACT AND FEEDBACK:**
 
