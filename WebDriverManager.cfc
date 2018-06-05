@@ -150,14 +150,13 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfargument name="platform" type="string" required="no" default="WINDOWS" hint="What platform you want the webdriver to run on. This is pretty close to the OS, but differs slightly, and is used to extract information such as program locations and line endings" />
 		<cfargument name="browserVersion" type="numeric" required="false" default=0 hint="The version of the browser, or pass as empty if you don't know (or care for that matter)." />
 		<cfargument name="browserArguments" type="array" required="no" default="#arrayNew(1)#" hint="An array of arguments specific to the browser that you want the webdriver to start with. NOTE: For the browsers that support it, you can get a noticable performance boost by disabling automatic proxy detection!" />
-		<cfargument name="pathToWebDriverBIN" type="string" required="no" hint="The full path to the webdriver executable. If not passed then the default location will be used (see mappings in Application.cfc)" />
+		<cfargument name="pathToWebDriverBIN" type="string" required="yes" hint="The full path to the webdriver executable" />
 		<cfargument name="javaLoaderReference" type="any" required="false" />
 
 		<cfset var oJavaLoader = "" />
 		<cfset var oBrowser = "" />
 		<cfset var stBrowserData = getBrowserData(arguments.browser) />
 		<cfset var oBrowserCapabilities = createObject("java", "java.lang.Object") />
-		<cfset var sPathToBIN = reReplace("#application.mapping.DriverBins##stBrowserData.nameOfBinary#", "[/|\\]", "\\", "ALL") />
 		<cfset var oBrowserDesiredCapabilities = createObject("java", "java.lang.Object") />
 		<cfset var oBrowserOptions = createObject("java", "java.lang.Object") />
 		<cfset var stBrowserArguments = structNew() />
@@ -178,18 +177,13 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfif isValidBrowser(arguments.browser) IS false >
 			<cfthrow message="Error while creating browser" detail="Argument 'Browser' which you passed as '#arguments.browser#' is not a valid browser name!" />
 		</cfif>
-		<cfset stCreateWebDriverArguments.browser = arguments.browser />
 
 		<cfif isValidPlatform(arguments.platform) IS false >
 			<cfthrow message="Error while creating browser" detail="Argument 'Platform' which you passed as '#arguments.platform#' is not a valid platform name!" />
 		</cfif>
 
-		<cfif structKeyExists(arguments, "pathToWebDriverBIN") >
-			<cfif verifyFilePath(arguments.pathToWebDriverBIN) IS false >
-				<cfthrow message="Error while creating browser" detail="The path you passed in 'PathToWebDriverBIN' as '#arguments.pathToWebDriverBIN#' is an invalid file-path or the binary can't be found or read!" />
-			<cfelse>
-				<cfset sPathToBIN = arguments.pathToWebDriverBIN />
-			</cfif>
+		<cfif verifyFilePath(arguments.pathToWebDriverBIN) IS false >
+			<cfthrow message="Error while creating browser" detail="The path you passed in 'PathToWebDriverBIN' as '#arguments.pathToWebDriverBIN#' is an invalid file-path or the binary can't be found or read!" />
 		</cfif>
 
 		<cfif arguments.remote >
@@ -265,9 +259,9 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 			</cftry>
 		<cfelse>
 			<cfif arguments.browser IS "Firefox" >
-				<cfset createObject("java", "java.lang.System").setProperty("webdriver.gecko.driver", sPathToBIN) />
+				<cfset createObject("java", "java.lang.System").setProperty("webdriver.gecko.driver", arguments.pathToWebDriverBIN) />
 			<cfelse>
-				<cfset createObject("java", "java.lang.System").setProperty("webdriver.#lCase(arguments.browser)#.driver", sPathToBIN) />
+				<cfset createObject("java", "java.lang.System").setProperty("webdriver.#lCase(arguments.browser)#.driver", arguments.pathToWebDriverBIN) />
 			</cfif>
 
 			<cfif isObject(oJavaLoader) >

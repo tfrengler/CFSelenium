@@ -6,6 +6,7 @@
 	<cfset oElementLocator = "" />
 	<cfset nWaitForDOMReadyStateTimeOut = 0 />
 	<cfset bFetchHiddenElements = false />
+	<cfset bUseStrictVisibilityCheck = true />
 	<cfset oJavaLoader = "" />
 
 	<!--- CONSTRUCTOR --->
@@ -38,7 +39,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<!--- PRIVATE METHODS --->
+	<!--- PRIVATE SETTERS/GETTERS --->
 
 	<cffunction name="setElementLocator" returntype="void" access="private" >
 		<cfargument name="data" type="Components.ElementLocator" required="yes" />
@@ -64,14 +65,12 @@
 		<cfset variables.nWaitForDOMReadyStateTimeOut = arguments.data />
 	</cffunction>
 
-	<cffunction name="getWaitForDOMReadyStateTimeOut" returntype="numeric" access="private" >
-		<cfreturn variables.nWaitForDOMReadyStateTimeOut />
-	</cffunction>
+	<!--- PRIVATE METHODS --->
 
 	<cffunction name="fetchHTMLElements" returntype="array" access="private" hint="The primary mechanism for getting HTML elements. It is only used internally by this component, and other public methods act as facades for calling this." >
 		<cfargument name="locator" type="Components.Locator" required="true" />
 		<cfargument name="locateHiddenElements" type="boolean" required="true" />
-		<cfargument name="searchContext" type="any" required="false" default="#getJavaWebDriver()#" hint="A reference to a Selenium Java-object, either the remote.RemoteWebDriver-class, or a remote.RemoteWebElement-class. This is the context in which the browser searches for elements. Normally this would be the browser/webdriver itself (within the document-node) but you can also search within DOM-elements using Selenium, just like you can in Javascript." />
+		<cfargument name="searchContext" type="any" required="false" default="#variables.oJavaWebDriver#" hint="A reference to a Selenium Java-object, either the remote.RemoteWebDriver-class, or a remote.RemoteWebElement-class. This is the context in which the browser searches for elements. Normally this would be the browser/webdriver itself (within the document-node) but you can also search within DOM-elements using Selenium, just like you can in Javascript." />
 
 		<cfset var aReturnData = arrayNew(1) />
 		<cfset var stElementArguments = structNew() />
@@ -129,19 +128,23 @@
 
 				<cfif arguments.locateHiddenElements IS false >
 
-					<cfif oCurrentWebElement.isDisplayed() >
+					<cfif variables.isElementFetchable(javaWebElement=oCurrentWebElement) >
+
 						<cfset oElement = createObject("component", "Components.Element").init( 
 							argumentCollection = stElementArguments
 						) />
 						<cfset arrayAppend(aReturnData, oElement) />
+
 					</cfif>
 
 				<cfelse>
+
 					<cfset oElement = createObject("component", "Components.Element").init( 
 						argumentCollection = stElementArguments
 					) />
 					<cfset arrayAppend(aReturnData, oElement) />
 				</cfif>
+
 			</cfloop>
 
 		</cfif>
@@ -149,7 +152,41 @@
 		<cfreturn aReturnData />
 	</cffunction>
 
+	<cffunction name="isElementFetchable" returntype="boolean" access="private" hint="" >
+		<cfargument name="javaWebElement" type="any" required="true" />
+
+		<cfif variables.bUseStrictVisibilityCheck >
+			<cfreturn arguments.javaWebElement.isDisplayed() />
+		</cfif>
+
+		<!--- 
+			Selenium's isDisplayed() method considers the same conditions but it also requires the element to be in the viewport
+			and to be interactable/clickable (usually means not hidden/obscured behind other elements, fully or partially):
+			https://stackoverflow.com/questions/18062372/how-does-selenium-webdrivers-isdisplayed-method-work
+		--->
+		<cfif 	(
+					arguments.javaWebElement.size.height IS 0 OR
+					arguments.javaWebElement.size.width IS 0
+				)
+					OR
+				(
+					arguments.javaWebElement.getCssValue("display") IS "none" OR
+					arguments.javaWebElement.getCssValue("visibility") IS "hidden"
+				) >
+
+			<cfreturn false />
+		</cfif>
+
+		<cfreturn true />
+	</cffunction>
+
 	<!--- PUBLIC METHODS --->
+
+	<cffunction name="useStrictVisibilityCheck" returntype="void" access="public" hint="Enable or disable the strict visibility check for fetching elements. The stricter check requires elements to be clickable (so not obscured behind other elements) and to be within the viewport. This is addition to the element required to be displayed, visible and have a height or width greater than 0." >
+		<cfargument name="enable" type="boolean" required="true" />
+
+		<cfset variables.bUseStrictVisibilityCheck = arguments.enable />
+	</cffunction>
 
 	<cffunction name="getFetchHiddenElements" returntype="boolean" access="public" hint="Returns true or false depending on whether the browser will fetch hidden HTML-elements." >
 		<cfreturn variables.bFetchHiddenElements />
@@ -160,7 +197,6 @@
 	</cffunction>
 
 	<cffunction name="getJavaWebDriver" returntype="any" access="public" hint="Gets you a reference to the Java org.openqa.selenium.remote.RemoteWebDriver-class. The reason this is publicly exposed is because not all the Java methods have been abstracted so if you want (and you know what you are doing) you can access them directly." >
-		<cfset sleep(100) />
 		<cfreturn variables.oJavaWebDriver />
 	</cffunction>
 
@@ -192,7 +228,7 @@
 
 	<cffunction name="getElement" returntype="any" access="public" hint="Returns either the FIRST element or an array of ALL elements that matches your locator. If you search for multiple elements - and it finds nothing - you'll simply get an empty array. If you search for a single element - and it finds nothing - it will throw an error." >
 		<cfargument name="locator" type="Components.Locator" required="true" hint="An instance of the locator mechanism you want to use to search for the element" />
-		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#getFetchHiddenElements()#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
+		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#variables.bFetchHiddenElements#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
 		<cfargument name="multiple" type="boolean" required="false" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
 		<cfset var stFetchHTMLElementsArguments = arguments />
@@ -231,7 +267,7 @@
 		<cfset var sJQueryReadyScript = "" />
 		<cfset var nTimeDifference = 0 />
 		<cfset var aJavascriptArguments = javaCast("java.lang.Object[]", arrayNew(1)) />
-		<cfset var nTimeOut = getWaitForDOMReadyStateTimeOut() /> <!--- Be aware that it is not completely accurate. The function's execution time plus the sleep() adds a bit of overhead --->
+		<cfset var nTimeOut = variables.nWaitForDOMReadyStateTimeOut /> <!--- Be aware that it is not completely accurate. The function's execution time plus the sleep() adds a bit of overhead --->
 
 		<cfset nTimeDifference = numberFormat(nCurrentTickCount/1000,'999') - numberFormat(arguments.tickCountStart/1000,'999') />
 
@@ -373,8 +409,8 @@
  		<cfset var Type = "" />
  		<cfset var Screenshot = "" />
 
- 		<cfif isObject(getJavaloader()) >
-			<cfset oOutputType = getJavaloader().create("org.openqa.selenium.OutputType") />
+ 		<cfif isObject(variables.oJavaLoader) >
+			<cfset oOutputType = variables.oJavaLoader.create("org.openqa.selenium.OutputType") />
 		<cfelse>
 			<cfset oOutputType = createObject("java", "org.openqa.selenium.OutputType") />
 		</cfif>
@@ -402,7 +438,6 @@
 			javascriptArguments=arguments.javascriptArguments,
 			javaByReference=variables.oJavaBy
 		) />
-
 	</cffunction>
 
 	<cffunction name="waitUntil" returntype="any" access="public" hint="Use this to wait for certain element conditions, such as for an element to be visible, clickable etc. This is mostly meants as a means of dealing with JS that manipulates the DOM, such as with animations, that you can't otherwise detect and wait for to finish." >
@@ -443,9 +478,9 @@
 			<cfthrow message="Error when waiting for condition" detail="Argument 'elementOrLocator' is not an instance of Locator.cfc or Element.cfc" />
 		</cfif>
 
-		<cfif isObject(getJavaloader()) >
-			<cfset oExpectedConditions = getJavaloader().create("org.openqa.selenium.support.ui.ExpectedConditions") />
-			<cfset oWebdriverWait = getJavaloader().create("org.openqa.selenium.support.ui.WebDriverWait").init(getJavaWebDriver(), arguments.timeout) />
+		<cfif isObject(variables.oJavaLoader) >
+			<cfset oExpectedConditions = variables.oJavaLoader.create("org.openqa.selenium.support.ui.ExpectedConditions") />
+			<cfset oWebdriverWait = variables.oJavaLoader.create("org.openqa.selenium.support.ui.WebDriverWait").init(getJavaWebDriver(), arguments.timeout) />
 		<cfelse>
 			<cfset oExpectedConditions = createObject("java", "org.openqa.selenium.support.ui.ExpectedConditions") />
 			<cfset oWebdriverWait = createObject("java", "org.openqa.selenium.support.ui.WebDriverWait").init(getJavaWebDriver(), arguments.timeout) />
@@ -465,9 +500,9 @@
 
 		<cfelseif isInstanceOf(arguments.elementOrLocator, "Element") AND (isObject(ReturnData) AND ReturnData.getClass().getName() IS "org.openqa.selenium.remote.RemoteWebElement") >
 			<cfreturn arguments.elementOrLocator />
-		<cfelse>
-			<cfreturn ReturnData />
 		</cfif>
+
+		<cfreturn ReturnData />
 	</cffunction>
 
 </cfcomponent>

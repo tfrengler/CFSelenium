@@ -8,22 +8,12 @@
 	<cffunction name="init" returntype="Components.ElementLocator" access="public" hint="Constructor" >
 		<cfargument name="browserReference" type="Components.Browser" required="true" />
 
-		<cfset setWrappedBrowser(data=arguments.browserReference) />
+		<cfset variables.oWrappedBrowser = arguments.browserReference />
 
 		<cfreturn this />
 	</cffunction>
 
 	<!--- PRIVATE METHODS --->
-
-	<cffunction name="setWrappedBrowser" returntype="void" access="private" >
-		<cfargument name="data" type="Components.Browser" required="yes" />
-
-		<cfset variables.oWrappedBrowser = arguments.data />
-	</cffunction>
-
-	<cffunction name="getWrappedBrowser" returntype="Components.Browser" access="private" >
-		<cfreturn variables.oWrappedBrowser />
-	</cffunction>
 
 	<cffunction name="getByAttributeAndOperator" returntype="any" access="private" hint="The primary method for getting elements by their attributes depending on operator. The other public attribute-methods act as facades for this one." >
 		<cfargument name="attribute" type="string" required="yes" hint="" />
@@ -47,7 +37,7 @@
 
 		<cfset sSearchString = "#trim(arguments.onlyElementsOfTag)#[#trim(arguments.attribute)##arguments.operator#='#arguments.value#']" />
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "cssSelector"
 		) />
@@ -57,9 +47,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
@@ -81,7 +71,7 @@
 			<cfset sSearchString = "#arguments.onlyElementsOfTag#[title='#arguments.title#']" />
 		</cfif>
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "cssSelector"
 		) />
@@ -91,9 +81,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
@@ -102,7 +92,7 @@
 	<cffunction name="id" returntype="any" access="public" hint="Search for and retrieve elements based on the id-attribute." >
 		<cfargument name="id" type="string" required="yes" hint="The id of the elements you want to search for." />
 		<cfargument name="onlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain id, rather than any element." />
-		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
+		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found. Note that ID's are supposed to be unique and that only 1 element will be fetched, even if multiple exist with the same ID. But this parameter is still useful for checking the presence of the element." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
 
 		<cfset var ReturnData = "" />
@@ -113,7 +103,7 @@
 			<cfset sSearchString = "#arguments.onlyElementsOfTag##sSearchString#" />
 		</cfif>
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "cssSelector"
 		) />
@@ -123,9 +113,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
@@ -156,7 +146,7 @@
 			</cfif>
 		</cfif>
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "cssSelector"
 		) />
@@ -166,9 +156,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
@@ -188,7 +178,7 @@
 			<cfset sSearchString="#arguments.onlyElementsOfTag##sSearchString#" />
 		</cfif>
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "cssSelector"
 		) />
@@ -198,9 +188,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
@@ -221,7 +211,7 @@
 			<cfset sSearchString= "//#arguments.onlyElementsOfTag#[normalize-space(.)='#arguments.text#']" />
 		</cfif>
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "xpath"
 		) />
@@ -231,9 +221,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
@@ -254,7 +244,7 @@
 			<cfset sSearchString= "//#arguments.onlyElementsOfTag#[text()[contains(.,'#arguments.text#')]]" />
 		</cfif>
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "xpath"
 		) />
@@ -264,9 +254,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
@@ -281,7 +271,7 @@
 		<cfset var sSearchString = "input[type='#arguments.type#']" />
 		<cfset var oLocator = "" />
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "cssSelector"
 		) />
@@ -291,9 +281,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
@@ -308,7 +298,7 @@
 		<cfset var sSearchString = "[value='#arguments.value#']" />
 		<cfset var oLocator = "" />
 
-		<cfset oLocator = getWrappedBrowser().createLocator(
+		<cfset oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = sSearchString,
 			locateUsing = "cssSelector"
 		) />
@@ -318,9 +308,9 @@
 		</cfif>
 
 		<cfif arguments.multiple >
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator, multiple=true) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 		<cfelse>
-			<cfset ReturnData = getWrappedBrowser().getElement(locator=oLocator) />
+			<cfset ReturnData = variables.oWrappedBrowser.getElement(locator=oLocator) />
 		</cfif>
 
 		<cfreturn ReturnData />
