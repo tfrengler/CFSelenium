@@ -98,7 +98,7 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
-					<cfthrow message="Error getting first selected option" detail="Cannot select the first selected option because this select tag has no selected elements | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+					<cfthrow message="Error getting first selected option" detail="Cannot select the first selected option because this select tag has no selected elements | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString()# | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()#" />
 				</cfif>
 
 				<cfrethrow/>
@@ -121,7 +121,7 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
-					<cfthrow message="Error selecting by visible text" detail="Can't select option by visible text. There's no option of this select tag with this inner text: #arguments.text# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+					<cfthrow message="Error selecting by visible text" detail="Can't select option by visible text. There's no option of this select tag with this inner text: #arguments.text# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 				</cfif>
 
 				<cfrethrow/>
@@ -141,7 +141,7 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
-					<cfthrow  message="Error selecting by index" detail="Can't select option by index value. The index value is likely out of bounds. Your target index: #arguments.index# | Actual amount of options: #getNumberOfOptions()# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+					<cfthrow  message="Error selecting by index" detail="Can't select option by index value. The index value is likely out of bounds. Your target index: #arguments.index# | Actual amount of options: #getNumberOfOptions()# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 				</cfif>
 
 				<cfrethrow/>
@@ -157,7 +157,7 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
-					<cfthrow  message="Error selecting by value" detail="Can't select option by value. There's no option of this select tag with this value: #arguments.value# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+					<cfthrow  message="Error selecting by value" detail="Can't select option by value. There's no option of this select tag with this value: #arguments.value# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 				</cfif>
 
 				<cfrethrow/>
@@ -171,7 +171,7 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "java.lang.UnsupportedOperationException" >
-					<cfthrow message="Error deselecting all select options" detail="Can't de-select all options in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+					<cfthrow message="Error deselecting all select options" detail="Can't de-select all options in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 				</cfif>
 
 				<cfrethrow/>
@@ -183,7 +183,7 @@
 		<cfargument name="value" type="string" required="true" hint="The value in text of the option you want to de-select" />
 
 		<cfif variables.oJavaSelectInterface.isMultiple() IS false >
-			<cfthrow message="Error deselecting by value" detail="Can't de-select option by value in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+			<cfthrow message="Error deselecting by value" detail="Can't de-select option by value in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 		</cfif>
 
 		<cftry>
@@ -191,7 +191,7 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
-					<cfthrow message="Error deselecting by value" detail="Can't de-select option by value. There's no option of this select tag with this value: #arguments.value# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+					<cfthrow message="Error deselecting by value" detail="Can't de-select option by value. There's no option of this select tag with this value: #arguments.value# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 				</cfif>
 
 				<cfrethrow/>
@@ -203,11 +203,11 @@
 		<cfargument name="index" type="numeric" required="true" hint="The index number of the option you want to de-select. Note that the indexes start from 0" />
 
 		<cfif variables.oJavaSelectInterface.isMultiple() IS false >
-			<cfthrow message="Error deselecting by index" detail="Can't de-select option by index in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+			<cfthrow message="Error deselecting by index" detail="Can't de-select option by index in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 		</cfif>
 
 		<cfif variables.getNumberOfOptions() IS 0 >
-			<cfthrow  message="Error de-selecting by index" detail="Can't de-select option by index value as there are no options in this select-tag | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+			<cfthrow  message="Error de-selecting by index" detail="Can't de-select option by index value as there are no options in this select-tag | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 		</cfif>
 		
 		<cftry>
@@ -215,7 +215,7 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
-					<cfthrow message="Error deselecting by index" detail="Can't de-select option by index value. The index value is likely out of bounds. Your target index: #arguments.index# | Actual amount of options: #getNumberOfOptions()# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+					<cfthrow message="Error deselecting by index" detail="Can't de-select option by index value. The index value is likely out of bounds. Your target index: #arguments.index# | Actual amount of options: #getNumberOfOptions()# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 				</cfif>
 
 				<cfrethrow/>
@@ -227,7 +227,7 @@
 		<cfargument name="text" type="string" required="true" hint="The text of the option you want to de-select" />
 
 		<cfif variables.oJavaSelectInterface.isMultiple() IS false >
-			<cfthrow message="Error deselecting by visible text" detail="Can't de-select option by inner text in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+			<cfthrow message="Error deselecting by visible text" detail="Can't de-select option by inner text in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 		</cfif>
 		
 		<cftry>
@@ -235,7 +235,7 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
-					<cfthrow message="Error deselecting by visible text" detail="Can't de-select option by visible text. There's no option of this select tag with this inner text: #arguments.text# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()#" />
+					<cfthrow message="Error deselecting by visible text" detail="Can't de-select option by visible text. There's no option of this select tag with this inner text: #arguments.text# | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorString() | Locator string: #variables.oWrappedElement.getLocator().getLocatorMechanism()" />
 				</cfif>
 
 				<cfrethrow/>

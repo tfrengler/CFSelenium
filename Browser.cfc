@@ -210,7 +210,7 @@
 				</cfif>
 			</cfif>
 
-			<cfset getJavaWebDriver().manage().timeouts().implicitlyWait(
+			<cfset variables.oJavaWebDriver.manage().timeouts().implicitlyWait(
 				javaCast("long", arguments.timeout),
 				createObject("java", "java.util.concurrent.TimeUnit").SECONDS
 			) />
@@ -255,10 +255,10 @@
 		</cfif>
 	</cffunction>
 
-	<cffunction name="waitForDocumentToBeReady" returntype="void" access="public" hint="This method is used internally to wait for the document to be ready, primarily used to wait for AJAX-calls to complete. It checks both the DOM (document.readyState) and for calls made with jQuery (jQuery.active). It recursively calls itself until the document is ready or until the timeout is reached." >
+	<cffunction name="waitForDocumentToBeReady" returntype="void" access="public" hint="This method is used internally to wait for the document to be ready, primarily used to wait for AJAX-calls to complete. It checks both the DOM (document.readyState) and for calls made with jQuery (jQuery.active). It recursively calls itself until the document is ready or until the timeout is reached. Be aware that it returns as soon as the AJAX call itself is complete, which means the page may not be done rendering, which could still lead to issues. You may want to use waitUntil() or implement your own custom wait mechanism instead in that case." >
 		<cfargument name="tickCountStart" type="numeric" required="false" default="#getTickCount()#" />
 
-		<cfset sleep(50) />
+		<cfset sleep(100) />
 
 		<cfset var nCurrentTickCount = getTickCount() />
 		<cfset var bDocumentReadyState = false />
@@ -300,21 +300,21 @@
 			};
 		</cfsavecontent>
 		
-		<cfset bDocumentReadyState = getJavaWebDriver().executeScript(
+		<cfset bDocumentReadyState = variables.oJavaWebDriver.executeScript(
 			sDocumentReadyScript,
 			aJavascriptArguments
 		) />
-		<cfset bJQueryReadyState = getJavaWebDriver().executeScript(
+		<cfset bJQueryReadyState = variables.oJavaWebDriver.executeScript(
 			sJQueryReadyScript,
 			aJavascriptArguments
 		) />
 
 		<cfif bDocumentReadyState IS true AND bJQueryReadyState IS true >
 			<!--- End recursion, resume whatever else comes after the call to this function --->
-			<cfreturn />
-		<cfelse>
-			<cfset WaitForDocumentToBeReady(TickCountStart=arguments.tickCountStart) />
+			<cfreturn />	
 		</cfif>
+
+		<cfset waitForDocumentToBeReady(TickCountStart=arguments.tickCountStart) />
 	</cffunction>
 
 	<cffunction name="navigateTo" returntype="void" access="public" hint="Load a new web page in the current browser window." >
@@ -328,15 +328,15 @@
 			</cfcatch>
 		</cftry>
 
-		<cfset getJavaWebDriver().get( arguments.URL ) />
+		<cfset variables.oJavaWebDriver.get( arguments.URL ) />
 	</cffunction>
 
 	<cffunction name="quit" returntype="void" access="public" hint="Quits this driver, closing every associated window." >
-		<cfreturn getJavaWebDriver().quit() />
+		<cfreturn variables.oJavaWebDriver.quit() />
 	</cffunction>
 
 	<cffunction name="close" returntype="void" access="public" hint="Close the current window, quitting the browser if it's the last window currently open." >
-		<cfreturn getJavaWebDriver().close() />
+		<cfreturn variables.oJavaWebDriver.close() />
 	</cffunction>
 
 	<cffunction name="runJavascript" returntype="any" access="public" hint="Executes Javascript on the current page. The script you provide will be executed as the body of an anonymous function. Note that local variables will not be available once the script has finished executing, though global variables will persist. If the script returns something Selenium will attempt to convert them. If the script returns nothing or the value is null, then it returns null. Note that it's entirely possible for you to use this method to return an element. However it will then be a Java-object (RemoteWebElement) rather than a CF component (Element.cfc). The proper way to get elements via JS is to use getElement()" >
@@ -355,12 +355,12 @@
 
 		<cftry>
 	 		<cfif arguments.Asynchronous >
-				<cfset ReturnDataFromScript = getJavaWebDriver().executeAsyncScript(
+				<cfset ReturnDataFromScript = variables.oJavaWebDriver.executeAsyncScript(
 					arguments.script,
 					aJavascriptArguments
 				) />
 			<cfelse>
-				<cfset ReturnDataFromScript = getJavaWebDriver().executeScript(
+				<cfset ReturnDataFromScript = variables.oJavaWebDriver.executeScript(
 					arguments.script,
 					aJavascriptArguments
 				) />
@@ -418,7 +418,7 @@
  		<cfif listFindNoCase(sValidFormats, arguments.format) GT 0 >
 
 			<cfset Type = oOutputType[ uCase(arguments.format) ] />
-			<cfset Screenshot = getJavaWebDriver().getScreenshotAs(Type) />
+			<cfset Screenshot = variables.oJavaWebDriver.getScreenshotAs(Type) />
 
 		<cfelse>
 			<cfthrow message="Error taking screenshot" detail="Argument 'Format' that you passed as '#arguments.format#' is not a valid format type. Valid formats are: #sValidFormats#" />	
@@ -444,6 +444,10 @@
 		<cfargument name="condition" type="string" required="true" hint="The name of the condition you want to wait for" />
 		<cfargument name="elementOrLocator" type="any" required="true" hint="The argument for the condition. This is either a Locator or an Element. For some conditions it returns the element you passed or the element that would be found using the locator you passed. Some conditions (like invisibility) returns true once the condition is satisfied." />
 		<cfargument name="timeout" type="numeric" required="false" default="10" hint="How long the browser should wait (in seconds) before throwing an error" />
+
+		<!--- 
+			HUGE disclaimer: Conditions that use locators are not subject to visibility checks!
+		--->
 
 		<cfset var ReturnData = "" />
 		<cfset var oExpectedConditions = createObject("java", "java.lang.Object") />
@@ -480,15 +484,16 @@
 
 		<cfif isObject(variables.oJavaLoader) >
 			<cfset oExpectedConditions = variables.oJavaLoader.create("org.openqa.selenium.support.ui.ExpectedConditions") />
-			<cfset oWebdriverWait = variables.oJavaLoader.create("org.openqa.selenium.support.ui.WebDriverWait").init(getJavaWebDriver(), arguments.timeout) />
+			<cfset oWebdriverWait = variables.oJavaLoader.create("org.openqa.selenium.support.ui.WebDriverWait").init(variables.oJavaWebDriver, javaCast("long", arguments.timeout)) />
 		<cfelse>
 			<cfset oExpectedConditions = createObject("java", "org.openqa.selenium.support.ui.ExpectedConditions") />
-			<cfset oWebdriverWait = createObject("java", "org.openqa.selenium.support.ui.WebDriverWait").init(getJavaWebDriver(), arguments.timeout) />
+			<cfset oWebdriverWait = createObject("java", "org.openqa.selenium.support.ui.WebDriverWait").init(variables.oJavaWebDriver, javaCast("long", arguments.timeout)) />
 		</cfif>
 		
 		<cfset ReturnData = oWebdriverWait.until(
 			invoke(oExpectedConditions, arguments.condition, [oExpectedConditionArgument])
 		) />
+		<cfset sleep(500) />
 
 		<cfif isInstanceOf(arguments.elementOrLocator, "Locator") AND (isObject(ReturnData) AND ReturnData.getClass().getName() IS "org.openqa.selenium.remote.RemoteWebElement") >
 			

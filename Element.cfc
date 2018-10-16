@@ -60,7 +60,7 @@
 	<cffunction name="select" returntype="Components.SelectElement" access="public" hint="Returns a reference to the interface used for interacting with the special functions of a select-tag. If this element is not a select-tag then an error will be thrown" >
 
 		<cfif isSelectTag() IS false >
-			<cfthrow message="Error getting select-tag interface" detail="You can't use select-methods on this element because it's not a select-tag. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+			<cfthrow message="Error getting select-tag interface" detail="You can't use select-methods on this element because it's not a select-tag. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 		</cfif>
 
 		<cfreturn variables.oSelectInterface />
@@ -187,15 +187,15 @@
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" >
-					<cfthrow message="Error when writing in element" detail="Can't write in the element because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+					<cfthrow message="Error when writing in element" detail="Can't write in the element because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				</cfif>
 
 				<cfif cfcatch.type IS "org.openqa.selenium.InvalidElementStateException" >
-					<cfthrow message="Error when writing in element" detail="Can't write in the element, likely because it's disabled, obscured or not a type of element you can type text in. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+					<cfthrow message="Error when writing in element" detail="Can't write in the element, likely because it's disabled, obscured or not a type of element you can type text in. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				</cfif>
 
 				<cfif cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("keys should be a string", cfcatch.message) GT 0 >
-					<cfthrow message="Error when writing in element" detail="Can't write in the element. One of the array keys from argument 'text' is NOT a string. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+					<cfthrow message="Error when writing in element" detail="Can't write in the element. One of the array keys from argument 'text' is NOT a string. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				</cfif>
 
 				<cfrethrow/>
@@ -204,17 +204,21 @@
 	</cffunction>
 
 	<cffunction name="click" returntype="void" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0." >
-		<cfset sleep(50) /> <!--- Necessary evil as Selenium has a tendency to click an element before it's considered clickable sometimes --->
+		<cfargument name="waitUntilClickable" type="boolean" required="false" default="false" hint="Wait for the element to become clickable before trying to click on it. Timeout is whatever Browser.waitUntil() is set to as default" />
+
+		<cfif arguments.waitUntilClickable >
+			<cfset variables.oWrappedBrowser.waitUntil(
+				condition="elementToBeClickable",
+				elementOrLocator=this
+			) />
+		</cfif>
+
 		<cftry>
 			<cfset variables.oJavaWebElement.click() />
 
 			<cfcatch>
-				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" >
-					<cfthrow message="Error when clicking on element" detail="Can't click on the element because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
-				</cfif>
-
-				<cfif cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("is not clickable at point (", cfcatch.message) GT 0 >
-					<cfthrow message="Error when clicking on element" detail="Can't click on the element. Likely because it's not visible or partially hidden/obscured. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" OR (cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("is not clickable at point (", cfcatch.message) GT 0) >
+					<cfthrow message="Error when clicking on element" detail="Can't click on the element. Likely because it's not visible, partially hidden/obscured or not ready yet due to dynamic loading (dialogs) or animations that aren't finished. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				</cfif>
 
 				<cfrethrow/>
@@ -232,7 +236,7 @@
 
 			<cfcatch >
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
-					<cfthrow message="Form submission failed" detail="The element you called submitForm() on is not part of a form. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+					<cfthrow message="Form submission failed" detail="The element you called submitForm() on is not part of a form. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				</cfif>
 
 				<cfrethrow/>
@@ -278,7 +282,7 @@
 
 			<cfcatch>
 				<cfif find("Unable to find HTML-element", cfcatch.detail) GT 0 >
-					<cfthrow message="Error getting previous sibling element" detail="This element does not have a previous sibling. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+					<cfthrow message="Error getting previous sibling element" detail="This element does not have a previous sibling. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				<cfelse>
 					<cfrethrow/>
 				</cfif>
@@ -300,7 +304,7 @@
 
 			<cfcatch>
 				<cfif find("Unable to find HTML-element", cfcatch.detail) GT 0 >
-					<cfthrow message="Error getting next sibling element" detail="This element does not have a next sibling. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+					<cfthrow message="Error getting next sibling element" detail="This element does not have a next sibling. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				<cfelse>
 					<cfrethrow/>
 				</cfif>
@@ -320,7 +324,7 @@
 		<cfset var aReturnData = variables.oWrappedBrowser.getElement(locator=oLocator, multiple=true) />
 
 		<cfif arrayLen(aReturnData) IS 0 >
-			<cfthrow message="Error getting child elements" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+			<cfthrow message="Error getting child elements" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 		</cfif>
 
 		<cfreturn aReturnData />
@@ -339,7 +343,7 @@
 
 			<cfcatch>
 				<cfif find("Unable to find HTML-element", cfcatch.detail) GT 0 >
-					<cfthrow message="Error getting first child element" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | #getClassName()#" />
+					<cfthrow message="Error getting first child element" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				<cfelse>
 					<cfrethrow/>
 				</cfif>
@@ -361,7 +365,7 @@
 
 			<cfcatch>
 				<cfif find("Unable to find HTML-element", cfcatch.detail) GT 0 >
-					<cfthrow message="Error getting last child element" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()#" />
+					<cfthrow message="Error getting last child element" detail="This element does not have any child elements. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				<cfelse>
 					<cfrethrow/>
 				</cfif>

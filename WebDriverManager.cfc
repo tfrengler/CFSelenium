@@ -152,6 +152,7 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfargument name="browserArguments" type="array" required="no" default="#arrayNew(1)#" hint="An array of arguments specific to the browser that you want the webdriver to start with. NOTE: For the browsers that support it, you can get a noticable performance boost by disabling automatic proxy detection!" />
 		<cfargument name="pathToWebDriverBIN" type="string" required="yes" hint="The full path to the webdriver executable" />
 		<cfargument name="javaLoaderReference" type="any" required="false" />
+		<cfargument name="enableChromeLogging" type="boolean" required="false" default="false" />
 
 		<cfset var oJavaLoader = "" />
 		<cfset var oBrowser = "" />
@@ -160,6 +161,11 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfset var oBrowserDesiredCapabilities = createObject("java", "java.lang.Object") />
 		<cfset var oBrowserOptions = createObject("java", "java.lang.Object") />
 		<cfset var stBrowserArguments = structNew() />
+
+		<cfset var oLoggingPreferences = createObject("java", "java.lang.Object") />
+		<cfset var oLogType = createObject("java", "java.lang.Object") />
+		<cfset var oLogLevel = createObject("java", "java.lang.Object") />
+		<cfset var oCapabilityType = createObject("java", "java.lang.Object") />
 
 		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
 			<cfset oJavaLoader = arguments.javaLoaderReference />
@@ -216,6 +222,27 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<!--- Browser specific behavior --->
 		<cfif arguments.browser IS "Chrome" >
 			<cfset oBrowserCapabilities.setCapability(oBrowserOptions.CAPABILITY, oBrowserOptions) />
+
+			<cfif arguments.enableChromeLogging >
+
+				<cfif isObject(oJavaLoader) >
+					<cfset oLoggingPreferences = oJavaLoader.create("org.openqa.selenium.logging.LoggingPreferences").init() />
+					<cfset oLogType = oJavaloader.create("org.openqa.selenium.logging.LogType") />
+					<cfset oLogLevel = oJavaloader.create("java.util.logging.Level") />
+					<cfset oCapabilityType = oJavaloader.create("org.openqa.selenium.remote.CapabilityType") />
+				<cfelse>
+					<cfset oLoggingPreferences = createObject("java", "org.openqa.selenium.logging.LoggingPreferences").init() />
+					<cfset oLogType = createObject("java", "org.openqa.selenium.logging.LogType") />
+					<cfset oLogLevel = createObject("java", "java.util.logging.Level") />
+					<cfset oCapabilityType = createObject("java", "org.openqa.selenium.remote.CapabilityType") />
+				</cfif>
+
+				<cfset oLoggingPreferences.enable(oLogType.PERFORMANCE, oLogLevel.INFO) />
+				<cfset oLoggingPreferences.enable(oLogType.BROWSER, oLogLevel.ALL) />
+
+				<cfset oBrowserCapabilities.setCapability(oCapabilityType.LOGGING_PREFS, oLoggingPreferences) />
+
+			</cfif>
 		</cfif>
 
 		<cfif arguments.browser IS "Firefox" >
