@@ -206,7 +206,7 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 			</cfif>
 		</cfif>
 
-		<cfif arrayIsEmpty(arguments.browserArguments) EQ false >
+		<cfif arrayIsEmpty(arguments.browserArguments) EQ false AND listFindNoCase("chrome,firefox", arguments.browser) >
 			<cfset oBrowserOptions.addArguments( arguments.browserArguments ) />
 		</cfif>
 
@@ -219,22 +219,18 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 			<cfset oBrowserCapabilities.setCapability("version", "") />
 		</cfif>
 
-		<!--- Browser specific behavior --->
-		<cfif arguments.browser IS "Chrome" >
-			<cfset oBrowserCapabilities.setCapability(oBrowserOptions.CAPABILITY, oBrowserOptions) />
-
-			<cfif structKeyExists(arguments, "loggingPreferences") AND isInstanceOf(arguments.loggingPreferences, "Components.WebdriverLogSettings") >
-
-				<cfif isObject(oJavaLoader) >
-					<cfset oCapabilityType = oJavaloader.create("org.openqa.selenium.remote.CapabilityType") />
-				<cfelse>
-					<cfset oCapabilityType = createObject("java", "org.openqa.selenium.remote.CapabilityType") />
-				</cfif>
-
-				<cfset oBrowserCapabilities.setCapability(oCapabilityType.LOGGING_PREFS, arguments.loggingPreferences.getJavaLogPreferences()) />
+		<cfif structKeyExists(arguments, "loggingPreferences") >
+			<!--- Note that different browsers may not implement all the different log types! --->
+			<cfif isObject(oJavaLoader) >
+				<cfset oCapabilityType = oJavaloader.create("org.openqa.selenium.remote.CapabilityType") />
+			<cfelse>
+				<cfset oCapabilityType = createObject("java", "org.openqa.selenium.remote.CapabilityType") />
 			</cfif>
+
+			<cfset oBrowserCapabilities.setCapability(oCapabilityType.LOGGING_PREFS, arguments.loggingPreferences.getJavaLogPreferences()) />
 		</cfif>
 
+		<!--- Browser specific behavior --->
 		<cfif arguments.browser IS "Firefox" >
 
 			<cfif isObject(oJavaLoader) >
@@ -245,6 +241,9 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 
 			<cfset oBrowserOptions.addTo( oBrowserCapabilities ) />
 		</cfif>
+		<!--- End browser specific behaviour --->
+
+		<cfset oBrowserCapabilities.setCapability(oBrowserOptions.CAPABILITY, oBrowserOptions) />
 
 		<cfif arguments.remote >
 			<cftry>
