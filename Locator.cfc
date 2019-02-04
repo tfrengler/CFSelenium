@@ -1,12 +1,12 @@
-<cfcomponent output="false" hint="A wrapper for Selenium's Java By-class that represents the mechanism used to fetch elements from the DOM" >
+<cfcomponent output="false" modifier="final" hint="A wrapper for Selenium's Java By-class that represents the mechanism used to fetch elements from the DOM" >
 <cfprocessingdirective pageencoding="utf-8" />
 
-	<cfset oSeleniumLocator = createObject("java", "java.lang.Object") />
-	<cfset sLocatorString = "" />
-	<cfset sLocatorMechanism = "" />
-	<cfset aJavascriptArguments = arrayNew(1) />
+	<cfset variables.oSeleniumLocator = "" />
+	<cfset variables.sLocatorString = "" />
+	<cfset variables.sLocatorMechanism = "" />
+	<cfset variables.aJavascriptArguments = arrayNew(1) />
 
-	<cfset aValidLocators = [ 
+	<cfset variables.aValidLocators = [ 
 		"id",
 		"cssSelector",
 		"xpath",
@@ -42,17 +42,19 @@
 			<cfthrow message="Error getting element locator" detail="The locator type you passed in argument 'locateUsing' is an invalid Selenium locator: #arguments.locateUsing#. Valid locators are: #arrayToList(aValidLocators)#" />
 		</cfif>
 
-		<cfset setJavascriptArguments(data=arguments.javascriptArguments) />
+		<cfif isObject(arguments.javaByReference) IS false >
+			<cfthrow message="Error getting element locator" detail="Can't set Selenium locator. Argument 'javaByReference' is not an object" />
+		</cfif>
 
-		<cfset setLocatorString(data=arguments.searchFor) />
-		<cfset setLocatorMechanism(data=arguments.locateUsing) />
+		<cfset variables.oSeleniumLocator = arguments.javaByReference />
+		<cfset variables.aJavascriptArguments = arguments.javascriptArguments />
+		<cfset variables.sLocatorString = arguments.searchFor />
+		<cfset variables.sLocatorMechanism = arguments.locateUsing />
 
 		<!--- Although you can create/fetch elements using JS it's not an official selector --->
 		<cfif arguments.locateUsing IS NOT "javascript" >
 			<cftry>
-				<cfset setSeleniumLocator(
-					data=invoke(arguments.javaByReference, arguments.locateUsing, [arguments.searchFor])
-				) />
+				<cfset variables.oSeleniumLocator = invoke(arguments.javaByReference, arguments.locateUsing, [arguments.searchFor]) />
 
 				<cfcatch>
 
@@ -78,36 +80,6 @@
 		</cfif>
 
 		<cfreturn this />
-	</cffunction>
-
-	<!--- PRIVATE METHODS --->
-
-	<cffunction name="setJavascriptArguments" returntype="void" access="private" >
-		<cfargument name="data" type="array" required="yes" />
-
-		<cfset variables.aJavascriptArguments = arguments.data />
-	</cffunction>
-
-	<cffunction name="setLocatorString" returntype="void" access="private" >
-		<cfargument name="data" type="string" required="yes" />
-
-		<cfset variables.sLocatorString = arguments.data />
-	</cffunction>
-
-	<cffunction name="setLocatorMechanism" returntype="void" access="private" >
-		<cfargument name="data" type="string" required="yes" />
-
-		<cfset variables.sLocatorMechanism = arguments.data />
-	</cffunction>
-
-	<cffunction name="setSeleniumLocator" returntype="void" access="private" >
-		<cfargument name="data" type="any" required="yes" />
-
-		<cfif isObject(arguments.data) IS false >
-			<cfthrow message="Error getting element locator" detail="Can't set Selenium locator. Argument 'data' is not an object" />
-		</cfif>
-
-		<cfset variables.oSeleniumLocator = arguments.data />
 	</cffunction>
 
 	<!--- PUBLIC METHODS --->

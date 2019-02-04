@@ -1,7 +1,7 @@
 <cfcomponent output="false" hint="An interface/facade that is injected into Element.cfc (composition). It's a wrapper for Selenium's support.ui.Select-class, and contains methods specifically for interacting with select-tags." >
 <cfprocessingdirective pageencoding="utf-8" />
 
-	<cfset oJavaSelectInterface = createObject("java", "java.lang.Object") />
+	<cfset oJavaSelectInterface = "" />
 	<cfset oWrappedElement = "" />
 
 	<!--- CONSTRUCTOR --->
@@ -39,16 +39,14 @@
 	</cffunction>
 
 	<cffunction name="getNumberOfOptions" returntype="numeric" access="public" hint="Returns the amount of options belonging to this select tag" >
-		<cfset var aListOfOptions = variables.oJavaSelectInterface.getOptions() />
-
-		<cfreturn arrayLen(aListOfOptions) />
+		<cfreturn arrayLen(variables.oJavaSelectInterface.getOptions()) />
 	</cffunction>
 
 	<cffunction name="getAllOptions" returntype="array" access="public" hint="Returns an array of all options belonging to this select tag" >
 
 		<cfset var aListOfOptionsAsCFObjects = arrayNew(1) />		
 		<cfset var aListOfOptionsAsJavaObjects = variables.oJavaSelectInterface.getOptions() />
-		<cfset var oCurrentWebElement = createObject("java", "java.lang.Object") />
+		<cfset var oCurrentWebElement = "" />
 		<cfset var oElement = "" />
 
 		<cfif arrayLen(aListOfOptionsAsJavaObjects) GT 0 >
@@ -133,7 +131,7 @@
 		<cfargument name="index" type="numeric" required="true" hint="The index number of the option you want to select. Note that the indexes start from 0" />
 
 		<cfif variables.getNumberOfOptions() IS 0 OR (variables.getNumberOfOptions() IS 1 AND len(variables.getAllOptions()[1].getTextContent()) IS 0 ) >
-			<cfthrow  message="Error selecting by index" detail="Can't select option by index value as there are no proper options in this select-tag" />
+			<cfthrow message="Error selecting by index" detail="Can't select option by index value as there are no proper options in this select-tag" />
 		</cfif>
 
 		<cftry>

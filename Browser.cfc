@@ -1,13 +1,14 @@
-<cfcomponent output="false" hint="Coldfusion representation of a browser, acting as a Coldfusion wrapper for Selenium's org.openqa.selenium.remote.RemoteWebDriver-class. Not all Selenium's Java methods are abstracted, but you can still access the original Java object using a public method." >
+<cfcomponent output="false" modifier="final" hint="Coldfusion representation of a browser, acting as a Coldfusion wrapper for Selenium's org.openqa.selenium.remote.RemoteWebDriver-class. Not all Selenium's Java methods are abstracted, but you can still access the original Java object using a public method." >
 <cfprocessingdirective pageencoding="utf-8" />
 
-	<cfset oJavaWebDriver = createObject("java", "java.lang.Object") />
-	<cfset oJavaBy = createObject("java", "java.lang.Object") />
-	<cfset oElementLocator = "" />
-	<cfset nWaitForDOMReadyStateTimeOut = 0 />
-	<cfset bFetchHiddenElements = false />
-	<cfset bUseStrictVisibilityCheck = true />
-	<cfset oJavaLoader = "" />
+	<cfset variables.oJavaWebDriver = "" /> <!--- Java object --->
+	<cfset variables.oJavaBy = "" /> <!--- Java object --->
+	<cfset variables.oElementLocator = "" /> <!--- CF component --->
+	<cfset variables.oElementExistenceChecker = "" /> <!--- CF component --->
+	<cfset variables.nWaitForDOMReadyStateTimeOut = 0 />
+	<cfset variables.bFetchHiddenElements = false />
+	<cfset variables.bUseStrictVisibilityCheck = true />
+	<cfset variables.oJavaLoader = "" />
 
 	<!--- CONSTRUCTOR --->
 
@@ -21,48 +22,19 @@
 		</cfif>
 
 		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
-			<cfset setJavaloader(data=arguments.javaLoaderReference) />
+			<cfset variables.oJavaLoader = arguments.javaLoaderReference />
 			<cfset variables.oJavaBy = arguments.javaLoaderReference.create("org.openqa.selenium.By") />
 		<cfelse>
 			<cfset variables.oJavaBy = createObject("java", "org.openqa.selenium.By") />
 		</cfif>
 
-		<cfset setElementLocator( 
-			data=createObject("component", "Components.ElementLocator").init(
-				browserReference=this
-			) 
-		) />
+		<cfset variables.oElementLocator = createObject("component", "Components.ElementLocator").init(browserReference=this) />
+		<cfset variables.oElementExistenceChecker = createObject("component", "Components.ElementExistenceChecker").init(browserReference=this) />
 
-		<cfset setJavaWebDriver( data = arguments.webDriverReference ) />
+		<cfset variables.oJavaWebDriver = arguments.webDriverReference />
 		<cfset variables.nWaitForDOMReadyStateTimeOut = arguments.waitForDOMReadyStateTimeOut />
 
 		<cfreturn this />
-	</cffunction>
-
-	<!--- PRIVATE SETTERS/GETTERS --->
-
-	<cffunction name="setElementLocator" returntype="void" access="private" >
-		<cfargument name="data" type="Components.ElementLocator" required="yes" />
-
-		<cfset variables.oElementLocator = arguments.data />
-	</cffunction>
-
-	<cffunction name="setJavaloader" returntype="void" access="private" >
-		<cfargument name="data" type="any" required="yes" />
-
-		<cfset variables.oJavaLoader = arguments.data />
-	</cffunction>
-	
-	<cffunction name="setJavaWebDriver" returntype="void" access="private" >
-		<cfargument name="data" type="any" required="yes" />
-
-		<cfset variables.oJavaWebDriver = arguments.data />
-	</cffunction>
-
-	<cffunction name="setWaitForDOMReadyStateTimeOut" returntype="void" access="private" >
-		<cfargument name="data" type="numeric" required="yes" />
-
-		<cfset variables.nWaitForDOMReadyStateTimeOut = arguments.data />
 	</cffunction>
 
 	<!--- PRIVATE METHODS --->
@@ -91,9 +63,9 @@
 		<cfif arguments.locator.getLocatorMechanism() IS "javascript" >
 
 			<cfset ReturnDataFromScript = runJavascript(
-				Script=arguments.locator.getLocatorString(),
-				Parameters=arguments.locator.getJavascriptArguments(),
-				Asynchronous=false
+				script=arguments.locator.getLocatorString(),
+				parameters=arguments.locator.getJavascriptArguments(),
+				asynchronous=false
 			) />
 
 			<cfif isDefined("ReturnDataFromScript") >
@@ -115,9 +87,7 @@
 			</cfif>
 
 		<cfelse>
-			<cfset aElementsFoundInDOM = arguments.searchContext.findElements(
-				arguments.locator.getSeleniumLocator()
-			) />
+			<cfset aElementsFoundInDOM = arguments.searchContext.findElements(arguments.locator.getSeleniumLocator()) />
 		</cfif>
 
 		<cfif arrayIsEmpty(aElementsFoundInDOM) IS false >
@@ -226,6 +196,42 @@
 		<cfreturn variables.oElementLocator />
 	</cffunction>
 
+	<cffunction name="doElementsExist" returntype="Components.ElementExistenceChecker" access="public" hint="Returns an interface that contains handy methods designed to check the existence of elements by attribute or value. Existence checks are either binary (true/false) or based on amount." >
+		<cfreturn variables.oElementExistenceChecker />
+	</cffunction>
+
+	<cffunction name="retryClickingElement" returntype="void" access="public" hint="Repeatedly tries to click on an element returned by the given locator for a given amount of attempts. Useful for working with what is the same element over and over in a loop or page refresh and you want to deal with Stale Element-exceptions." >
+		<cfargument name="locator" type="Components.Locator" required="true" hint="An instance of the locator mechanism you want to use to search for the element" />
+		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#variables.bFetchHiddenElements#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
+		<cfargument name="attempts" type="numeric" required="false" default="1" hint="Amount of times to attempt clicking the element, ignoring all exceptions while doing so" />
+
+		<cfset var nAttemptCount = 0 />
+		<cfset var bSuccess = false />
+
+		<cfloop from="1" to=#arguments.attempts# index="nAttemptCount" >
+
+			<cfif bSuccess >
+				<cfreturn/>
+			</cfif>
+
+			<cftry>
+
+				<cfset variables.getElement(locator=arguments.locator, locateHiddenElements=arguments.locateHiddenElements).click() />
+				<cfset bSuccess = true />
+
+				<cfcatch>
+					<cfif nAttemptCount NEQ arguments.attempts >
+						<!--- Still trying to click the element so ignoring all exceptions and trying again after half a second --->
+						<cfset sleep(500) />
+					<cfelse>
+						<cfrethrow />
+					</cfif>
+				</cfcatch>
+
+			</cftry>
+		</cfloop>
+	</cffunction>
+
 	<cffunction name="getElement" returntype="any" access="public" hint="Returns either the FIRST element or an array of ALL elements that matches your locator. If you search for multiple elements - and it finds nothing - you'll simply get an empty array. If you search for a single element - and it finds nothing - it will throw an error." >
 		<cfargument name="locator" type="Components.Locator" required="true" hint="An instance of the locator mechanism you want to use to search for the element" />
 		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#variables.bFetchHiddenElements#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
@@ -263,8 +269,6 @@
 		<cfset var nCurrentTickCount = getTickCount() />
 		<cfset var bDocumentReadyState = false />
 		<cfset var bJQueryReadyState = false />
-		<cfset var sDocumentReadyScript = "" />
-		<cfset var sJQueryReadyScript = "" />
 		<cfset var nTimeDifference = 0 />
 		<cfset var aJavascriptArguments = javaCast("java.lang.Object[]", arrayNew(1)) />
 		<cfset var nTimeOut = variables.nWaitForDOMReadyStateTimeOut /> <!--- Be aware that it is not completely accurate. The function's execution time plus the sleep() adds a bit of overhead --->
@@ -275,37 +279,15 @@
 			<cfthrow message="Error while waiting for DOM to get ready" detail="WaitForDocumentToBeReady() hit the timeout before the DOM was ready. Timeout is: #nTimeOut#" />
 			<cfreturn />
 		</cfif>
-
-		<cfsavecontent variable="sDocumentReadyScript">
-			var sDocumentState = document.readyState;
-			if (sDocumentState === "complete") {
-				return true
-			}
-			else {
-				return false;
-			};
-		</cfsavecontent>
-
-		<cfsavecontent variable="sJQueryReadyScript" >
-			if (typeof jQuery === "undefined") {
-				return true;
-			};
-
-			var nJQueryState = jQuery.active;
-			if (nJQueryState === 0) {
-				return true
-			}
-			else {
-				return false;
-			};
-		</cfsavecontent>
 		
 		<cfset bDocumentReadyState = variables.oJavaWebDriver.executeScript(
-			sDocumentReadyScript,
+			"return document.readyState === 'complete';",
 			aJavascriptArguments
 		) />
 		<cfset bJQueryReadyState = variables.oJavaWebDriver.executeScript(
-			sJQueryReadyScript,
+			"if (typeof jQuery === 'undefined') return true;
+			if (jQuery.active === 0)return true;
+			else return false;",
 			aJavascriptArguments
 		) />
 
@@ -405,7 +387,7 @@
 		<cfargument name="format" type="string" required="false" default="bytes" hint="The format you want the screenshot returned as. Can return either base64, raw bytes or a java.io.File-object. Valid parameter strings are: 'bytes', 'base64' or 'file'." />
 
  		<cfset var sValidFormats = "bytes,base64,file" />
- 		<cfset var oOutputType = createObject("java", "java.lang.Object") />
+ 		<cfset var oOutputType = "" />
  		<cfset var Type = "" />
  		<cfset var Screenshot = "" />
 
@@ -450,9 +432,9 @@
 		--->
 
 		<cfset var ReturnData = "" />
-		<cfset var oExpectedConditions = createObject("java", "java.lang.Object") />
-		<cfset var oExpectedConditionArgument = createObject("java", "java.lang.Object") />
-		<cfset var oWebdriverWait = createObject("java", "java.lang.Object") />
+		<cfset var oExpectedConditions = "" />
+		<cfset var oExpectedConditionArgument = "" />
+		<cfset var oWebdriverWait = "" />
 
 		<cfset var aValidConditions = [
 			"visibilityOfElementLocated", <!--- Uses locators --->
@@ -493,7 +475,6 @@
 		<cfset ReturnData = oWebdriverWait.until(
 			invoke(oExpectedConditions, arguments.condition, [oExpectedConditionArgument])
 		) />
-		<cfset sleep(500) />
 
 		<cfif isInstanceOf(arguments.elementOrLocator, "Locator") AND (isObject(ReturnData) AND ReturnData.getClass().getName() IS "org.openqa.selenium.remote.RemoteWebElement") >
 			
@@ -507,6 +488,7 @@
 			<cfreturn arguments.elementOrLocator />
 		</cfif>
 
+		<cfset sleep(50) />
 		<cfreturn ReturnData />
 	</cffunction>
 

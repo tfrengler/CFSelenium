@@ -1,10 +1,10 @@
-<cfcomponent output="false" hint="Coldfusion representation of a DOM-element, acting as a wrapper for Selenium's org.openqa.selenium.remote.RemoteWebElement-class." >
+<cfcomponent output="false" modifier="final" hint="Coldfusion representation of a DOM-element, acting as a wrapper for Selenium's org.openqa.selenium.remote.RemoteWebElement-class." >
 <cfprocessingdirective pageencoding="utf-8" />
 
-	<cfset oWrappedBrowser = "" /> <!--- CF-component references --->
-	<cfset oJavaWebElement = createObject("java", "java.lang.Object") /> <!--- Java-object references --->
-	<cfset oSelectInterface = "" /> <!--- CF-component references --->
-	<cfset oLocator = structNew() /> <!--- CF-component references --->
+	<cfset variables.oWrappedBrowser = "" /> <!--- CF-component reference --->
+	<cfset variables.oJavaWebElement = "" /> <!--- Java-object reference --->
+	<cfset variables.oSelectInterface = "" /> <!--- CF-component reference --->
+	<cfset variables.oLocator = "" /> <!--- CF-component reference --->
 
 	<!--- CONSTRUCTOR --->
 
@@ -14,33 +14,22 @@
 		<cfargument name="browserReference" type="Components.Browser" required="true" hint="A reference to the Browser-instance that was used to fetch this element." />
 		<cfargument name="javaLoaderReference" type="any" required="false" hint="A reference to Mark Mandel's Javaloader-component." />
 
-		<cfset var oSelectInterface = "" />
-
-		<cfset setJavaWebElement(data=arguments.webElementReference) />
+		<cfif isObject(arguments.webElementReference) IS false >
+			<cfthrow message="Error setting Java WebElement" detail="Argument 'webElementReference' is not an object" />
+		</cfif>
 
 		<cfif structKeyExists(arguments, "locatorReference") >
 			<cfset variables.oLocator = arguments.locatorReference />
 		</cfif>
+
+		<cfset variables.oJavaWebElement = arguments.webElementReference />
 		<cfset variables.oWrappedBrowser = arguments.browserReference />
 
 		<cfif isSelectTag() >
-			<cfset oSelectInterface = createObject("component", "Components.SelectElement").init(elementReference=this) />
-			<cfset variables.oSelectInterface = oSelectInterface />
+			<cfset variables.oSelectInterface = createObject("component", "Components.SelectElement").init(elementReference=this) />
 		</cfif>
 
 		<cfreturn this />
-	</cffunction>
-
-	<!--- PRIVATE SETTERS/GETTERS --->
-
-	<cffunction name="setJavaWebElement" returntype="void" access="private" hint="" >
-		<cfargument name="data" type="any" required="true" />
-
-		<cfif isObject(arguments.data) IS false >
-			<cfthrow message="Error setting Java WebElement" detail="Argument 'data' is not an object" />
-		</cfif>
-
-		<cfset variables.oJavaWebElement = arguments.data />
 	</cffunction>
 
 	<!--- PUBLIC SETTERS/GETTERS --->
@@ -110,6 +99,10 @@
 		<cfreturn trim(sCleanedReturnData) />
 	</cffunction>
 
+	<cffunction name="getInnerText" returntype="string" access="public" hint="Returns the innerText-attribute of this element. Unlikes textContent, it approximates the text the user would get if they highlighted the contents of the element with the cursor, and then copied it to the clipboard" >
+		<cfreturn variables.oJavaWebElement.getAttribute("innerText") <!--- IE10+ ---> />
+	</cffunction>
+
 	<cffunction name="getHTMLContent" returntype="string" access="public" hint="Returns the inner, nested HTML and their contents of this element." >
 		<cfargument name="encodeHTMLEntities" type="boolean" required="false" default="true" hint="Set to false to get all the special HTML entities returned in their original form, otherwise they will be encoded" />
 
@@ -157,19 +150,23 @@
 		<cfreturn variables.oJavaWebElement.isSelected() />
 	</cffunction>
 
-	<cffunction name="selectIfNotSelected" returntype="void" access="public" hint="Selects this element if it's de-selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
+	<cffunction name="selectIfNotSelected" returntype="Components.Element" access="public" hint="Selects this element if it's de-selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
 		<cfif isSelected() IS false >
 			<cfset click() />
 		</cfif>
+
+		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="deselectIfSelected" returntype="void" access="public" hint="De-selects this element if it's already selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
+	<cffunction name="deselectIfSelected" returntype="Components.Element" access="public" hint="De-selects this element if it's already selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
 		<cfif isSelected() >
 			<cfset click() />
 		</cfif>
+
+		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="write" returntype="void" access="public" hint="Simulate typing into this element. For some elements this will manipulate the value-attribute" >
+	<cffunction name="write" returntype="Components.Element" access="public" hint="Simulate typing into this element. For some elements this will manipulate the value-attribute" >
 		<cfargument name="text" type="array" required="true" hint="An array with each entry being a string that will be typed into the element" />
 		<cfargument name="addToExistingText" type="boolean" required="false" default="false" hint="By default whatever text is already in the element will be cleared. Pass this as true to add to the existing text instead." />
 		<cfargument name="convertToStrings" type="boolean" required="false" default="true" hint="Use this to turn off the forced conversion all the array values from parameter 'text' to string. Selenium will throw an exception if a value in the array is NOT a string." />
@@ -201,17 +198,13 @@
 				<cfrethrow/>
 			</cfcatch>
 		</cftry>
+
+		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="click" returntype="void" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0." >
-		<cfargument name="waitUntilClickable" type="boolean" required="false" default="false" hint="Wait for the element to become clickable before trying to click on it. Timeout is whatever Browser.waitUntil() is set to as default" />
-
-		<cfif arguments.waitUntilClickable >
-			<cfset variables.oWrappedBrowser.waitUntil(
-				condition="elementToBeClickable",
-				elementOrLocator=this
-			) />
-		</cfif>
+	<cffunction name="click" returntype="Components.Element" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0." >
+		<cfargument name="waitUntilClickable" type="numeric" required="false" default="0" hint="Amount of seconds to wait for the element to become clickable before trying to click on it." />
+		<!--- TODO(thomas): remove this argument after going through all test cases that uses it --->
 
 		<cftry>
 			<cfset variables.oJavaWebElement.click() />
@@ -224,10 +217,47 @@
 				<cfrethrow/>
 			</cfcatch>
 		</cftry>
+
+		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="clearText" returntype="void" access="public" hint="Clear this element's value, if this element is a text element (input and textarea)" >
+	<cffunction name="clickUsingEnter" returntype="Components.Element" access="public" hint="An alternative to click(), which uses the keyboard to press 'Enter' on the element instead of clicking with the mouse." >
+
+		<cftry>
+			<cfset variables.oJavaWebElement.sendKeys( [variables.oWrappedBrowser.getJavaloader().create("org.openqa.selenium.Keys").ENTER] ) />
+
+			<cfcatch>
+				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" OR (cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("is not clickable at point (", cfcatch.message) GT 0) >
+					<cfthrow message="Error when clicking on element" detail="Can't click on the element. Likely because it's not visible, partially hidden/obscured or not ready yet due to dynamic loading (dialogs) or animations that aren't finished. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
+				</cfif>
+
+				<cfrethrow/>
+			</cfcatch>
+		</cftry>
+
+		<cfreturn this />
+	</cffunction>
+
+	<cffunction name="clickUsingJS" returntype="Components.Element" access="public" hint="An alternative to click(), which Javascript to invoke the click()-method on the element instead of clicking with the mouse." >
+
+		<cftry>
+			<cfset variables.oWrappedBrowser.runJavascript(script="arguments[0].click()", parameters=[variables.oJavaWebElement]) />
+
+			<cfcatch>
+				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" OR (cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("is not clickable at point (", cfcatch.message) GT 0) >
+					<cfthrow message="Error when clicking on element" detail="Can't click on the element. Likely because it's not visible, partially hidden/obscured or not ready yet due to dynamic loading (dialogs) or animations that aren't finished. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
+				</cfif>
+
+				<cfrethrow/>
+			</cfcatch>
+		</cftry>
+
+		<cfreturn this />
+	</cffunction>
+
+	<cffunction name="clearText" returntype="Components.Element" access="public" hint="Clear this element's value, if this element is a text element (input and textarea)" >
 		<cfset variables.oJavaWebElement.clear() />
+		<cfreturn this />
 	</cffunction>
 
 	<cffunction name="submitForm" returntype="void" access="public" hint="If this element is a form, or an element within a form, then the form will be submitted. NOTE: This circumvents any eventhandlers that are attached to the submit-button!" >
@@ -288,7 +318,6 @@
 				</cfif>
 			</cfcatch>
 		</cftry>
-
 	</cffunction>
 
 	<cffunction name="getNextSiblingElement" returntype="Components.Element" access="public" hint="Returns the next (lower) sibling/neighbour-element of this element" >
@@ -310,7 +339,6 @@
 				</cfif>
 			</cfcatch>
 		</cftry>
-
 	</cffunction>
 
 	<cffunction name="getChildElements" returntype="array" access="public" hint="Returns an array of all elements that are direct children of this element." >
@@ -371,10 +399,9 @@
 				</cfif>
 			</cfcatch>
 		</cftry>
-
 	</cffunction>
 
-	<cffunction name="scrollIntoView" returntype="void" access="public" hint="Moves the mouse to this element which causes it to be scrolled into view" >
+	<cffunction name="scrollToAndFocusOn" returntype="Components.Element" access="public" hint="Moves the mouse to this element which causes it to be scrolled into view" >
 
 		<cfset var oActions = "" />
 
@@ -390,9 +417,10 @@
 
 		<cfset oActions.moveToElement(variables.getJavaWebElement()).perform() />
 
+		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="scrollIntoView2" returntype="void" access="public" hint="Scrolls this element into view. Similar to scrollIntoView, but is a more unstable solution that uses the Y-position of the viewport and the element to determine if the element is out of view, and then executes JS to scroll to the element. Consider it an (expensive) alternative to scrollIntoView, which is the recommended method." >
+	<cffunction name="scrollIntoView" returntype="Components.Element" access="public" hint="Scrolls this element into view but does not focus on it. Similar in many ways to scrollToAndFocusOn(), but is a more unstable solution that uses the Y-position of the viewport and the element to determine if the element is out of view, and then executes JS to scroll to the element. Consider it an (expensive) alternative to scrollToAndFocusOn, which is the recommended method." >
 
 		<cfset var nWindowHeight = variables.oWrappedBrowser.getJavaWebDriver().manage().window().getSize().height />
 
@@ -404,6 +432,7 @@
 
 		</cfif>
 
+		<cfreturn this />
 	</cffunction>
 
 </cfcomponent>
