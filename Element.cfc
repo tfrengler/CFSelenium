@@ -12,7 +12,6 @@
 		<cfargument name="webElementReference" type="any" required="true" hint="A reference to the Java remote.RemoteWebElement-class." />
 		<cfargument name="locatorReference" type="Components.Locator" required="false" hint="A reference to the Locator-instance that was used to find this element." />
 		<cfargument name="browserReference" type="Components.Browser" required="true" hint="A reference to the Browser-instance that was used to fetch this element." />
-		<cfargument name="javaLoaderReference" type="any" required="false" hint="A reference to Mark Mandel's Javaloader-component." />
 
 		<cfif isObject(arguments.webElementReference) IS false >
 			<cfthrow message="Error setting Java WebElement" detail="Argument 'webElementReference' is not an object" />
@@ -74,33 +73,23 @@
 	</cffunction>
 
 	<cffunction name="isSelectTag" returntype="boolean" access="public" hint="Use to determine whether this is a select-tag or not." >
-		<cfset var sElementType = variables.oJavaWebElement.getTagName() />
-
-		<cfif sElementType EQ "select" >
-			<cfreturn true />
-		<cfelse>
-			<cfreturn false />
-		</cfif>
+		<cfreturn variables.oJavaWebElement.getTagName() EQ "select" >
 	</cffunction>
 
-	<cffunction name="getTextContent" returntype="string" access="public" hint="Returns the textContent-attribute of this element. Note that this is not supported IE8 and below! Textconent means all the visible, inner text without any of the nested HTML-tags wrapped around them or their attributes. Example: calling this on the outer span of this: <span>Hello <span style='display: none;'>World</span></span> - would return 'Hello world'." >
-		<cfargument name="trimExtra" type="boolean" required="false" default="true" hint="Removes html spaces (&nbsp), carriage returns, tabs and newlines. Content is always trimmed for leading and trailing space regardless of this parameter." />
+	<!--- Important to note that some elements don't have innerText, like <textarea> --->
+	<cffunction name="getTextContent" returntype="string" access="public" hint="Returns the visible text content. Textcontent means all the visible, inner text without any of the nested HTML-tags wrapped around them or their attributes. Example: calling this on the outer span of this: <span>Hello <span style='display: none;'>World</span></span> - would return 'Hello world'." >
+		<cfargument name="raw" type="boolean" required="false" default="false" hint="When passed, this returns the full text content, including all tabs, line feeds, line breaks, double-spaces etc" />
+		<cfargument name="trimExtra" type="boolean" required="false" default="false" hint="This will remove things that are not whitespace, so stuff like &nbsp; etc" />
 
-		<cfset var sRawTextContent = variables.oJavaWebElement.getAttribute("textContent") /> <!--- Only works in IE9+ --->
-
-		<cfif arguments.trimExtra IS false >
-			<cfreturn trim(sRawTextContent) />
+		<cfif arguments.raw OR variables.oJavaWebElement.getTagName() EQ "textarea" >
+			<cfreturn trim(variables.oJavaWebElement.getAttribute("textContent")) /> <!--- Only works in IE9+ --->
 		</cfif>
 
-		<!--- The inner contents of our elements are often littered with extra spaces, carriage returns, tabs and newlines --->
-		<cfset var sCleanedReturnData = reReplace(sRawTextContent, "[\t\n\r]", "", "ALL") />
-		<cfset sCleanedReturnData = replace(sCleanedReturnData, chr(160), "", "ALL") /> <!--- &nbsp; --->
+		<cfif arguments.trimExtra >
+			<cfreturn variables.oWrappedBrowser.runJavascript(script="return arguments[0].innerText.trim()", parameters=[getJavaWebElement()]) />
+		</cfif>
 
-		<cfreturn trim(sCleanedReturnData) />
-	</cffunction>
-
-	<cffunction name="getInnerText" returntype="string" access="public" hint="Returns the innerText-attribute of this element. Unlikes textContent, it approximates the text the user would get if they highlighted the contents of the element with the cursor, and then copied it to the clipboard" >
-		<cfreturn variables.oJavaWebElement.getAttribute("innerText") <!--- IE10+ ---> />
+		<cfreturn trim(variables.oJavaWebElement.getAttribute("innerText")) <!--- IE10+ ---> />
 	</cffunction>
 
 	<cffunction name="getHTMLContent" returntype="string" access="public" hint="Returns the inner, nested HTML and their contents of this element." >
@@ -203,8 +192,6 @@
 	</cffunction>
 
 	<cffunction name="click" returntype="Components.Element" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0." >
-		<cfargument name="waitUntilClickable" type="numeric" required="false" default="0" hint="Amount of seconds to wait for the element to become clickable before trying to click on it." />
-		<!--- TODO(thomas): remove this argument after going through all test cases that uses it --->
 
 		<cftry>
 			<cfset variables.oJavaWebElement.click() />
@@ -238,7 +225,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="clickUsingJS" returntype="Components.Element" access="public" hint="An alternative to click(), which Javascript to invoke the click()-method on the element instead of clicking with the mouse." >
+	<cffunction name="clickUsingJS" returntype="Components.Element" access="public" hint="An alternative to click(), which uses Javascript to invoke the click()-method on the element instead of clicking with the mouse." >
 
 		<cftry>
 			<cfset variables.oWrappedBrowser.runJavascript(script="arguments[0].click()", parameters=[variables.oJavaWebElement]) />
@@ -424,10 +411,10 @@
 
 		<cfset var nWindowHeight = variables.oWrappedBrowser.getJavaWebDriver().manage().window().getSize().height />
 
-		<cfif variables.variables.oJavaWebElement.location.y GT nWindowHeight >
+		<cfif variables.oJavaWebElement.location.y GT nWindowHeight >
 
 			<cfset variables.oWrappedBrowser.runJavascript(
-				script="window.scrollTo(0, #variables.variables.oJavaWebElement.location.y + variables.variables.oJavaWebElement.size.height#)"
+				script="window.scrollTo(0, #variables.oJavaWebElement.location.y + variables.oJavaWebElement.size.height#)"
 			) />
 
 		</cfif>

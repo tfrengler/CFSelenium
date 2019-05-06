@@ -299,13 +299,12 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfargument name="browser" type="string" required="yes" hint="Name of the browser you'd like to create a service for" />
 		<cfargument name="useAnyFreePort" type="boolean" required="false" default="false" hint="Let the service use any free port available. Will override the Port-argument if passed as true." />
 		<cfargument name="port" type="numeric" required="no" default="0" hint="The port number you want the service to start the webdriver on. Will by default use the default port for the chosen browser's webdriver." />
-		<cfargument name="pathToWebDriverBIN" type="string" required="no" hint="The full path to the webdriver executable. If not passed then the default location will be used (see mappings in Application.cfc)" />
+		<cfargument name="pathToWebDriverBIN" type="string" required="true" hint="The full path to the webdriver executable" />
 		<cfargument name="javaLoaderReference" type="any" required="false" />
 
 		<cfset var stBrowserData = getBrowserData(arguments.browser) />
 		<cfset var oServiceBuilder = createObject("java", "java.lang.Object") />
 		<cfset var oWebDriverService = createObject("java", "java.lang.Object") />
-		<cfset var sPathToBIN = reReplace("#application.mapping.DriverBins##stBrowserData.nameOfBinary#", "[/|\\]", "\\", "ALL") />
 
 		<cfif isObject(oJavaLoader) >
 			<cfset oServiceBuilder = oJavaLoader.create("org.openqa.selenium.#lCase(arguments.browser)#.#stBrowserData.serviceJarName#$Builder") />
@@ -313,12 +312,8 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 			<cfset oServiceBuilder = createObject("java", "org.openqa.selenium.#lCase(arguments.browser)#.#stBrowserData.serviceJarName#$Builder") />
 		</cfif>
 
-		<cfif structKeyExists(arguments, "pathToWebDriverBIN") >
-			<cfif verifyFilePath(arguments.pathToWebDriverBIN) IS false >
-				<cfthrow message="Error while creating browser" detail="The path you passed in 'PathToWebDriverBIN' as '#arguments.pathToWebDriverBIN#' is an invalid file-path or the binary can't be found or read!" />
-			<cfelse>
-				<cfset sPathToBIN = arguments.pathToWebDriverBIN />
-			</cfif>
+		<cfif verifyFilePath(arguments.pathToWebDriverBIN) IS false >
+			<cfthrow message="Error while creating browser" detail="The path you passed in 'PathToWebDriverBIN' as '#arguments.pathToWebDriverBIN#' is an invalid file-path or the binary can't be found or read!" />
 		</cfif>
 
 		<cfif arguments.useAnyFreePort >
@@ -338,7 +333,7 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 			<cfset oServiceBuilder.usingPort( stBrowserData.defaultPort ) />
 		</cfif>
 
-		<cfset oServiceBuilder.usingDriverExecutable( createObject("java", "java.io.File").init(sPathToBIN) ) />
+		<cfset oServiceBuilder.usingDriverExecutable( createObject("java", "java.io.File").init(arguments.pathToWebDriverBIN) ) />
 		<cfset oWebDriverService = oServiceBuilder.Build() />
 
 		<cfif isObject(oWebDriverService) >
