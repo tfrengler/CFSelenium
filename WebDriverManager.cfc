@@ -96,7 +96,7 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 	<cffunction name="setBrowserData" returntype="void" access="private" >
 		<cfargument name="data" type="struct" required="yes" />
 
-		<cfset stBrowserData = arguments.data />
+		<cfset variables.stBrowserData = arguments.data />
 	</cffunction>
 
 	<cffunction name="getBrowsers" returntype="struct" access="public" >
@@ -161,10 +161,6 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfset var oBrowserDesiredCapabilities = createObject("java", "java.lang.Object") />
 		<cfset var oBrowserOptions = createObject("java", "java.lang.Object") />
 		<cfset var stBrowserArguments = structNew() />
-
-		<cfset var oLoggingPreferences = createObject("java", "java.lang.Object") />
-		<cfset var oLogType = createObject("java", "java.lang.Object") />
-		<cfset var oLogLevel = createObject("java", "java.lang.Object") />
 		<cfset var oCapabilityType = createObject("java", "java.lang.Object") />
 
 		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >

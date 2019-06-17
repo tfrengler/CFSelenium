@@ -472,9 +472,20 @@
 			<cfset oWebdriverWait = createObject("java", "org.openqa.selenium.support.ui.WebDriverWait").init(variables.oJavaWebDriver, javaCast("long", arguments.timeout)) />
 		</cfif>
 		
-		<cfset ReturnData = oWebdriverWait.until(
-			invoke(oExpectedConditions, arguments.condition, [oExpectedConditionArgument])
-		) />
+		<cftry>
+			<cfset ReturnData = oWebdriverWait.until(
+				invoke(oExpectedConditions, arguments.condition, [oExpectedConditionArgument])
+			) />
+		<cfcatch>
+
+			<cfif cfcatch.type IS "org.openqa.selenium.TimeoutException" >
+				<cfthrow type="BrowserWaitUntilTimeout" message="Error waiting for condition" detail="Timed out waiting for element with selector: #( isInstanceOf(arguments.elementOrLocator, "Locator") ? arguments.elementOrLocator.getLocatorString() : arguments.elementOrLocator.getLocator().getLocatorString() )#, to fullfill condition '#arguments.condition#'. Waited #arguments.timeout# seconds" />
+			<cfelse>
+				<cfrethrow />
+			</cfif>
+
+		</cfcatch>
+		</cftry>
 
 		<cfif isInstanceOf(arguments.elementOrLocator, "Locator") AND (isObject(ReturnData) AND ReturnData.getClass().getName() IS "org.openqa.selenium.remote.RemoteWebElement") >
 			

@@ -36,7 +36,7 @@
 			<cfif NOT arguments.getByDirectDescendantTextNodeOnly >
 				<cfset sXpathTextBehaviourOperator = "(.)" />
 			</cfif>
-			<cfset sXpathString = "#arguments.tagType#[#sXpathTextBehaviourOperator#[contains(.,'#jsStringFormat(arguments.text)#')]]" />
+			<cfset sXpathString = "#arguments.tagType#[#sXpathTextBehaviourOperator#[contains(normalize-space(.),'#jsStringFormat(arguments.text)#')]]" />
 		</cfif>
 
 		<cfoutput>
@@ -50,8 +50,8 @@
 					return 0;
 
 				while (node) {
-					node = findings.iterateNext();
 					returnData.push(node);
+					node = findings.iterateNext();
 				};
 
 				return returnData.length;

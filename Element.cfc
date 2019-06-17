@@ -274,12 +274,10 @@
 
 	<cffunction name="getParentElement" returntype="Components.Element" access="public" hint="Returns the parent element of this element" >
 
-		<cfset stLocatorArguments.searchFor = "return arguments[0].parentElement" />
-		<cfset stLocatorArguments.locateUsing = "javascript" />
-		<cfset stLocatorArguments.javascriptArguments = [getJavaWebElement()] />
-
 		<cfset var oLocator = variables.oWrappedBrowser.createLocator(
-			argumentCollection = stLocatorArguments
+			searchFor = "return arguments[0].parentElement",
+			locateUsing = "javascript",
+			javascriptArguments = [getJavaWebElement()]
 		) />
 
 		<cfreturn variables.oWrappedBrowser.getElement(locator=oLocator) />
