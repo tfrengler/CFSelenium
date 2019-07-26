@@ -42,3 +42,95 @@ I was encouraged to share this framework here on GitHub by my colleagues. As it 
 
 Lucee 5+
 Supports the use of Mark Mandel's **Javaloader**, although with the move to Lucee-only it's likely to be removed.
+
+**BASIC USAGE**
+
+Basic usage is via the webdriver (**Browser.cfc**) which finds and returns HTML-elements (**Element.cfc**) for you.
+
+To create a browser you use WebdriverManager.cfc like this:
+
+```coldfusion
+<cfset Browser = WebdriverManager.createBrowser(
+	browser="chrome",
+	remote=true
+	remoteServerAddress=127.0.0.1:1337
+	platform="WINDOWS"
+	pathToWebDriverBIN="C:\webdrivers\chromedriver.exe"
+) />
+```
+
+Once you have the browser you can start getting element using the shorthand methods from **getElementBy()**, or for more advanced use by using **getElement()**:
+
+```coldfusion
+<cfset UsernameElement = oBrowser.getElementBy().name(name="Username", onlyElementsOfTag="input") />
+```
+
+__OR__
+
+```coldfusion
+<cfset UsernameElement = oBrowser.getElement(
+	locator=oBrowser.createLocator(
+		searchFor="input[name='Username']",
+		locateUsing="cssSelector"
+	)
+) />
+```
+
+Then you can manipulate the element as you wish through the methods exposed by **Element.cfc** such as:
+
+```coldfusion
+<cfset UsernameElement.write(text=["Dave"]) />
+<cfset UsernameElement.click() />
+<cfset ClassAttribute = UsernameElement.getClassName() />
+```
+
+For CSS animations and AJAX you might need to wait until an element is visible or present:
+
+```coldfusion
+<cfset OutputElement = oBrowser.waitUntil(
+	condition="visibilityOfElementLocated",
+	elementOrLocator=oBrowser.createLocator(
+		searchFor="OutputBox",
+		locateUsing="id"
+	)
+) />
+```
+
+You manipulate the browser itself via the methods from **Browser.cfc** of course, such as:
+
+```coldfusion
+<cfset Browser.runJavascript(script="console.log('It works!')") />
+<cfset Browser.navigateTo(url="www.interesting-website.com") />
+```
+
+Not everything is exposed via CF methods so sometimes you want to get the underlying **Java**-element. Like this example where we are maximizing the browser window by using the **RemoteWebdriver**-java class directly:
+
+```coldfusion
+<cfset oBrowser.getJavaWebDriver().manage().window().maximize() />
+```
+
+Special elements such as select-tags are manipulated via **SelectElement.cfc** via is injected into **Element.cfc**:
+
+```coldfusion
+<cfset Browser.getElementBy().id(id="actions").select().selectByVisibleText(text="Status update") />
+```
+
+You can check for elements without necessarily fetching them, both if they are present or how many of them there are, via **ElementExistenceChecker.cfc**:
+
+```coldfusion
+<cfif oBrowser.doElementsExist().byAttributeContains(attribute="title", value="Download", tagType="a") >
+	// Do something
+</cfif>
+```
+
+__OR__
+
+```coldfusion
+<cfset DownloadLinks = oBrowser.doElementsExist().howManyByAttributeEquals(
+	attribute="title",
+	value="Download",
+	tagType="button"
+) />
+```
+
+That should be enough to get you started. Make sure to check out the source code for other methods and how they are used. Everything should be documented with both methods- and argument-hints.
