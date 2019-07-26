@@ -118,7 +118,7 @@ Special elements such as select-tags are manipulated via **SelectElement.cfc** v
 You can check for elements without necessarily fetching them, both if they are present or how many of them there are, via **ElementExistenceChecker.cfc**:
 
 ```coldfusion
-<cfif oBrowser.doElementsExist().byAttributeContains(attribute="title", value="Download", tagType="a") >
+<cfif Browser.doElementsExist().byAttributeContains(attribute="title", value="Download", tagType="a") >
 	// Do something
 </cfif>
 ```
@@ -126,7 +126,7 @@ You can check for elements without necessarily fetching them, both if they are p
 __OR__
 
 ```coldfusion
-<cfset DownloadLinks = oBrowser.doElementsExist().howManyByAttributeEquals(
+<cfset DownloadLinks = Browser.doElementsExist().howManyByAttributeEquals(
 	attribute="title",
 	value="Download",
 	tagType="button"
