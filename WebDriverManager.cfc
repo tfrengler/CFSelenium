@@ -112,8 +112,8 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 	<cffunction name="verifyFilePath" returntype="boolean" access="private" >
 		<cfargument name="filePath" type="string" required="yes" />
 
-		<cfset var oFileRead = "" />
 		<cftry>
+			<cfset var oFileRead = "" />
 			<cffile action="readbinary" file="#arguments.filePath#" variable="oFileRead" />
 		<cfcatch>
 			<cfreturn false />
@@ -151,8 +151,9 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfargument name="browserVersion" type="numeric" required="false" default=0 hint="The version of the browser, or pass as empty if you don't know (or care for that matter)." />
 		<cfargument name="browserArguments" type="array" required="no" default="#arrayNew(1)#" hint="An array of arguments specific to the browser that you want the webdriver to start with. NOTE: For the browsers that support it, you can get a noticable performance boost by disabling automatic proxy detection!" />
 		<cfargument name="pathToWebDriverBIN" type="string" required="yes" hint="The full path to the webdriver executable" />
-		<cfargument name="javaLoaderReference" type="any" required="false" />
-		<cfargument name="loggingPreferences" type="Components.WebdriverLogSettings" required="false" />
+		<cfargument name="javaLoaderReference" type="any" required="false" hint="A reference to Mark Mandel's Javaloader. If this isn't passed then all Selenium's Java-objects will be created used createObject(), and it's up to you to ensure the jars are loaded and available for use somehow" />
+		<cfargument name="loggingPreferences" type="Components.WebdriverLogSettings" required="false" hint="An instance of WebdriverLogSettings containing the log types and their levels" />
+		<cfargument name="eventLoggingPath" type="string" required="false" default="" hint="Full path to the directory where event logs will be stored. Passing this is effectively enabling event logs to be written" />
 
 		<cfset var oJavaLoader = "" />
 		<cfset var oBrowser = "" />
@@ -283,6 +284,10 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 			</cfif>
 		</cfif>
 		<!--- Be aware that as SOON as the webdriver (either local or remote version) is invoked the webdriver binary will be started (and the browser opens, whether silent or not) --->
+
+		<cfif len(arguments.eventLoggingPath) GT 0 >
+			<cfset stBrowserArguments.eventManagerReference = new Components.EventManager(arguments.eventLoggingPath) />
+		</cfif>
 
 		<cfset oBrowser = createObject("component", "Components.Browser").init(
 			argumentCollection = stBrowserArguments

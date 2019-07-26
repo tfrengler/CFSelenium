@@ -1,13 +1,15 @@
 <cfcomponent output="false" hint="An interface/facade that is injected into Element.cfc (composition). It's a wrapper for Selenium's support.ui.Select-class, and contains methods specifically for interacting with select-tags." >
 <cfprocessingdirective pageencoding="utf-8" />
 
-	<cfset oJavaSelectInterface = "" />
-	<cfset oWrappedElement = "" />
+	<cfset variables.oJavaSelectInterface = "" />
+	<cfset variables.oWrappedElement = "" />
+	<cfset variables.eventManager = "" />
 
 	<!--- CONSTRUCTOR --->
 
 	<cffunction name="init" returntype="Components.SelectElement" access="public" hint="Constructor" >
 		<cfargument name="elementReference" type="Components.Element" required="true" />
+		<cfargument name="eventManagerReference" type="Components.EventManager" required="false" />
 
 		<cfset variables.oWrappedElement = arguments.elementReference />
 
@@ -15,6 +17,10 @@
 			<cfset setJavaSelectInterface( data=variables.oWrappedElement.getWrappedBrowser().getJavaloader().create("org.openqa.selenium.support.ui.Select").init(arguments.elementReference.getJavaWebElement()) ) />
 		<cfelse>
 			<cfset setJavaSelectInterface( data=createObject("java", "org.openqa.selenium.support.ui.Select").init(arguments.elementReference.getJavaWebElement()) ) />
+		</cfif>
+
+		<cfif structKeyExists(arguments, "eventManagerReference") >
+			<cfset variables.eventManager = arguments.eventManagerReference />
 		</cfif>
 
 		<cfreturn this />
@@ -39,23 +45,37 @@
 	</cffunction>
 
 	<cffunction name="getNumberOfOptions" returntype="numeric" access="public" hint="Returns the amount of options belonging to this select tag" >
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
+
 		<cfreturn arrayLen(variables.oJavaSelectInterface.getOptions()) />
 	</cffunction>
 
 	<cffunction name="getAllOptions" returntype="array" access="public" hint="Returns an array of all options belonging to this select tag" >
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
 
 		<cfset var aListOfOptionsAsCFObjects = arrayNew(1) />		
 		<cfset var aListOfOptionsAsJavaObjects = variables.oJavaSelectInterface.getOptions() />
 		<cfset var oCurrentWebElement = "" />
 		<cfset var oElement = "" />
 
+		<cfset var stElementArguments = {
+			browserReference=variables.oWrappedElement.getWrappedBrowser()
+		} />
+
+		<cfif isObject(variables.eventManager) >
+			<cfset stElementArguments.eventManagerReference = variables.eventManagerReference />
+		</cfif>
+
 		<cfif arrayLen(aListOfOptionsAsJavaObjects) GT 0 >
 			<cfloop array="#aListOfOptionsAsJavaObjects#" index="oCurrentWebElement" >
 
-				<cfset oElement = createObject("component", "Components.Element").init(
-					webElementReference=oCurrentWebElement,
-					browserReference=variables.oWrappedElement.getWrappedBrowser()
-				) />
+				<cfset stElementArguments.webElementReference = oCurrentWebElement />
+				<cfset oElement = new Components.Element(argumentCollection = stElementArguments) />
+
 				<cfset arrayAppend(aListOfOptionsAsCFObjects, oElement) />
 
 			</cfloop>
@@ -65,19 +85,28 @@
 	</cffunction>
 
 	<cffunction name="getAllSelectedOptions" returntype="array" access="public" hint="Returns an array of all currently selected options belonging to this select tag" >
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
 
 		<cfset var aListOfOptionsAsCFObjects = arrayNew(1) />		
 		<cfset var aListOfOptionsAsJavaObjects = variables.oJavaSelectInterface.getAllSelectedOptions() />
 		<cfset var oCurrentWebElement = "" />
 		<cfset var oElement = "" />
 
+		<cfset var stElementArguments = {
+			browserReference=variables.oWrappedElement.getWrappedBrowser()
+		} />
+
+		<cfif isObject(variables.eventManager) >
+			<cfset stElementArguments.eventManagerReference = variables.eventManagerReference />
+		</cfif>
+
 		<cfif arrayLen(aListOfOptionsAsJavaObjects) GT 0 >
 			<cfloop array="#aListOfOptionsAsJavaObjects#" index="oCurrentWebElement" >
 
-				<cfset oElement = createObject("component", "Components.Element").init(
-					webElementReference=oCurrentWebElement,
-					browserReference=variables.oWrappedElement.getWrappedBrowser()
-				) />
+				<cfset stElementArguments.webElementReference = oCurrentWebElement />
+				<cfset oElement = new Components.Element(argumentCollection = stElementArguments) />
 				<cfset arrayAppend(aListOfOptionsAsCFObjects, oElement) />
 
 			</cfloop>
@@ -87,12 +116,12 @@
 	</cffunction>
 
 	<cffunction name="getFirstSelectedOption" returntype="Components.Element" access="public" hint="Returns the first selected option in this select tag (or the currently selected option in a normal select)" >
-	
-		<cfset var oElement = "" />
-		<cfset var oJavaElement = "" />
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
 		
 		<cftry>
-			<cfset oJavaElement = variables.oJavaSelectInterface.getFirstSelectedOption() />
+			<cfset var oJavaElement = variables.oJavaSelectInterface.getFirstSelectedOption() />
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.NoSuchElementException" >
@@ -103,17 +132,25 @@
 			</cfcatch>
 		</cftry>
 
-		<cfset oElement = createObject("component", "Components.Element").init(
+		<cfset var stElementArguments = {
 			webElementReference=oJavaElement,
 			browserReference=variables.oWrappedElement.getWrappedBrowser()
-		) />
+		} />
 
-		<cfreturn oElement />	
+		<cfif isObject(variables.eventManager) >
+			<cfset stElementArguments.eventManagerReference = variables.eventManagerReference />
+		</cfif>
+
+		<cfreturn new Components.Element(argumentCollection = stElementArguments) />	
 	</cffunction>
 
 	<cffunction name="selectByVisibleText" returntype="void" access="public" hint="Select all options whose display text matches the argument. That is, when given 'Bar' this would select an option like: <option value='foo'>Bar</option>" >
 		<cfargument name="text" type="string" required="true" hint="The text of the option you want to select" />
 		
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
+
 		<cftry>
 			<cfset variables.oJavaSelectInterface.selectByVisibleText(arguments.text) />
 
@@ -130,8 +167,12 @@
 	<cffunction name="selectByIndex" returntype="void" access="public" hint="Select the option at the given index. This is done by examining the 'index' attribute of an element, and not merely by counting." >
 		<cfargument name="index" type="numeric" required="true" hint="The index number of the option you want to select. Note that the indexes start from 0" />
 
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
+
 		<cfif variables.getNumberOfOptions() IS 0 OR (variables.getNumberOfOptions() IS 1 AND len(variables.getAllOptions()[1].getTextContent()) IS 0 ) >
-			<cfthrow message="Error selecting by index" detail="Can't select option by index value as there are no proper options in this select-tag" />
+			<cfthrow message="Error selecting by index" detail="Can't select option by index value as there are no proper options in this select-tag | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorMechanism()# | Locator string: #variables.oWrappedElement.getLocator().getLocatorString()#" />
 		</cfif>
 
 		<cftry>
@@ -150,6 +191,10 @@
 	<cffunction name="selectByValue" returntype="void" access="public" hint="Select all options that have a value matching the argument. That is, when given 'foo' this would select an option like: <option value='foo'>Bar</option>" >
 		<cfargument name="value" type="string" required="true" hint="The value in text of the option you want to select" />
 		
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
+
 		<cftry>
 			<cfset variables.oJavaSelectInterface.selectByValue(arguments.value) />
 
@@ -164,6 +209,10 @@
 	</cffunction>
 
 	<cffunction name="deselectAll" returntype="void" access="public" hint="Clear all selected entries. This is only valid when this select tag supports multiple selections, otherwise an error is thrown." >
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
+
 		<cftry>
 			<cfset variables.oJavaSelectInterface.deselectAll() />
 
@@ -179,6 +228,10 @@
 
 	<cffunction name="deselectByValue" returntype="void" access="public" hint="Deselect all options that have a value matching the argument. That is, when given 'foo' this would deselect an option like: <option value='foo'>Bar</option>. Only relevant for multiple-select enabled select-tags. Will throw an exception if it is not." >
 		<cfargument name="value" type="string" required="true" hint="The value in text of the option you want to de-select" />
+
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
 
 		<cfif variables.oJavaSelectInterface.isMultiple() IS false >
 			<cfthrow message="Error deselecting by value" detail="Can't de-select option by value in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorMechanism()# | Locator string: #variables.oWrappedElement.getLocator().getLocatorString()#" />
@@ -199,6 +252,10 @@
 
 	<cffunction name="deselectByIndex" returntype="void" access="public" hint="De-select the option at the given index. This is done by examining the 'index' attribute of an element, and not merely by counting. Only relevant for multiple-select enabled select-tags. Will throw an exception if it is not." >
 		<cfargument name="index" type="numeric" required="true" hint="The index number of the option you want to de-select. Note that the indexes start from 0" />
+
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
 
 		<cfif variables.oJavaSelectInterface.isMultiple() IS false >
 			<cfthrow message="Error deselecting by index" detail="Can't de-select option by index in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorMechanism()# | Locator string: #variables.oWrappedElement.getLocator().getLocatorString()#" />
@@ -223,6 +280,10 @@
 
 	<cffunction name="deselectByVisibleText" returntype="void" access="public" hint="De-select all options whose display text matches the argument. That is, when given 'Bar' this would select an option like: <option value='foo'>Bar</option>" >
 		<cfargument name="text" type="string" required="true" hint="The text of the option you want to de-select" />
+
+		<cfif isObject(variables.eventManager) >
+			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
+		</cfif>
 
 		<cfif variables.oJavaSelectInterface.isMultiple() IS false >
 			<cfthrow message="Error deselecting by visible text" detail="Can't de-select option by inner text in this select tag because it's not multi-select enabled | id: #variables.oWrappedElement.getID()# | Name: #variables.oWrappedElement.getName()# | Class: #variables.oWrappedElement.getClassName()# | Locator mechanism: #variables.oWrappedElement.getLocator().getLocatorMechanism()# | Locator string: #variables.oWrappedElement.getLocator().getLocatorString()#" />
