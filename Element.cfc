@@ -259,7 +259,7 @@
 			<cfset variables.oJavaWebElement.click() />
 
 			<cfcatch>
-				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" OR (cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("is not clickable at point (", cfcatch.message) GT 0) >
+				<cfif cfcatch.type IS "org.openqa.selenium.ElementClickInterceptedException" OR cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" OR (cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("is not clickable at point (", cfcatch.message) GT 0) >
 					<cfthrow message="Error when clicking on element" detail="Can't click on the element. Likely because it's not visible, partially hidden/obscured or not ready yet due to dynamic loading (dialogs) or animations that aren't finished. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 				</cfif>
 
