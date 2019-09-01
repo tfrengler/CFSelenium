@@ -50,11 +50,11 @@ Basic usage is via the webdriver (**Browser.cfc**) which finds and returns HTML-
 To create a browser you use WebdriverManager.cfc like this:
 
 ```coldfusion
-<cfset Browser = WebdriverManager.createBrowser(
+<cfset Browser = WebdriverManagerInstance.createBrowser(
 	browser="chrome",
-	remote=true
-	remoteServerAddress=127.0.0.1:1337
-	platform="WINDOWS"
+	remote=true,
+	remoteServerAddress="http://127.0.0.1:9515"
+	platform="WINDOWS",
 	pathToWebDriverBIN="C:\webdrivers\chromedriver.exe"
 ) />
 ```
