@@ -157,11 +157,14 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfset var oJavaLoader = "" />
 		<cfset var oBrowser = "" />
 		<cfset var stBrowserData = getBrowserData(arguments.browser) />
-		<cfset var oBrowserCapabilities = createObject("java", "java.lang.Object") />
-		<cfset var oBrowserDesiredCapabilities = createObject("java", "java.lang.Object") />
-		<cfset var oBrowserOptions = createObject("java", "java.lang.Object") />
-		<cfset var stBrowserArguments = structNew() />
-		<cfset var oCapabilityType = createObject("java", "java.lang.Object") />
+		<cfset var oBrowserCapabilities = "" />
+		<cfset var oBrowserDesiredCapabilities = "" />
+		<cfset var oBrowserOptions = "" />
+		<cfset var stBrowserArguments = {} />
+		<cfset var oCapabilityType = "" />
+		<cfset var remoteServerAddressPort = "" />
+		<cfset var remoteServerAddressIPorHost = "" />
+		<cfset var remoteServerAddressProtocol = "" />
 
 		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
 			<cfset oJavaLoader = arguments.javaLoaderReference />
@@ -195,10 +198,18 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 				<cfthrow message="Error while creating browser" detail="If you are passing argument 'Remote' as true then you must also pass argument 'RemoteServerAddress' as well" />
 			<cfelse>
 				<cftry>
-					<cfset createObject("java", "java.net.URL").init( arguments.remoteServerAddress ) />
+					<cfset remoteServerAddressProtocol = listFirst(arguments.remoteServerAddress, "://") />
+					<cfset remoteServerAddressPort = listLast(arguments.remoteServerAddress, ":") />
+					<cfset remoteServerAddressIPorHost = listFirst(reReplace(arguments.remoteServerAddress, "http://|https://", ""), ":") />
+					
+					<cfset arguments.remoteServerAddress = 
+						(len(remoteServerAddressProtocol) GT 0 ? "#remoteServerAddressProtocol#://" : "") &
+						createObject("java", "java.net.InetAddress").getByName(remoteServerAddressIPorHost).getHostAddress() &
+						(len(remoteServerAddressPort) GT 0 ? ":#remoteServerAddressPort#" : "")
+					/>
 
-					<cfcatch type="java.net.MalformedURLException">
-						<cfthrow message="Error while creating browser" detail="Either no legal protocol could be found in argument 'RemoteServerAddress' or it could not be parsed as a valid URL." />
+					<cfcatch>
+						<cfthrow message="Error while creating browser" detail="Either no legal protocol could be found in argument 'RemoteServerAddress', it could not be parsed as a valid URL or the domain could not be resolved: #arguments.remoteServerAddress#" />
 					</cfcatch>
 				</cftry>
 			</cfif>
