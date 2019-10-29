@@ -165,6 +165,7 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfset var remoteServerAddressPort = "" />
 		<cfset var remoteServerAddressIPorHost = "" />
 		<cfset var remoteServerAddressProtocol = "" />
+		<cfset var finalRemoteAddress = "" />
 
 		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
 			<cfset oJavaLoader = arguments.javaLoaderReference />
@@ -198,18 +199,14 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 				<cfthrow message="Error while creating browser" detail="If you are passing argument 'Remote' as true then you must also pass argument 'RemoteServerAddress' as well" />
 			<cfelse>
 				<cftry>
-					<cfset remoteServerAddressProtocol = listFirst(arguments.remoteServerAddress, "://") />
-					<cfset remoteServerAddressPort = listLast(arguments.remoteServerAddress, ":") />
+					<cfset remoteServerAddressProtocol = (arrayLen(reMatch("^(\w+://)", arguments.remoteServerAddress)) GT 0 ? reMatch("^\w+://", arguments.remoteServerAddress)[1] : "")  />
+					<cfset remoteServerAddressPortPart = (arrayLen(reMatch(":\d+.+", arguments.remoteServerAddress)) GT 0 ? reMatch(":\d+.+", arguments.remoteServerAddress)[1] : "")  />
 					<cfset remoteServerAddressIPorHost = listFirst(reReplace(arguments.remoteServerAddress, "http://|https://", ""), ":") />
 					
-					<cfset arguments.remoteServerAddress = 
-						(len(remoteServerAddressProtocol) GT 0 ? "#remoteServerAddressProtocol#://" : "") &
-						createObject("java", "java.net.InetAddress").getByName(remoteServerAddressIPorHost).getHostAddress() &
-						(len(remoteServerAddressPort) GT 0 ? ":#remoteServerAddressPort#" : "")
-					/>
+					<cfset finalRemoteAddress = "#remoteServerAddressProtocol##createObject("java", "java.net.InetAddress").getByName(remoteServerAddressIPorHost).getHostAddress()##remoteServerAddressPortPart#" />
 
-					<cfcatch>
-						<cfthrow message="Error while creating browser" detail="Either no legal protocol could be found in argument 'RemoteServerAddress', it could not be parsed as a valid URL or the domain could not be resolved: #arguments.remoteServerAddress#" />
+					<cfcatch type="java.net.UnknownHostException" >
+						<cfthrow message="Error while creating browser" detail="Argument 'RemoteServerAddress' could not be resolved: #arguments.remoteServerAddress#" />
 					</cfcatch>
 				</cftry>
 			</cfif>
@@ -259,12 +256,12 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 
 				<cfif isObject(oJavaLoader) >
 					<cfset stBrowserArguments.webDriverReference = oJavaLoader.create("org.openqa.selenium.remote.RemoteWebDriver").init(
-						createObject("java", "java.net.URL").init(arguments.remoteServerAddress),
+						createObject("java", "java.net.URL").init(finalRemoteAddress),
 						oBrowserCapabilities
 					) />
 				<cfelse>
 					<cfset stBrowserArguments.webDriverReference = createObject("java", "org.openqa.selenium.remote.RemoteWebDriver").init(
-						createObject("java", "java.net.URL").init(arguments.remoteServerAddress),
+						createObject("java", "java.net.URL").init(finalRemoteAddress),
 						oBrowserCapabilities
 					) />
 				</cfif>
@@ -274,6 +271,10 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 					<cfthrow message="Error while creating browser" detail="Could not create a RemoteWebDriver instance. The server address and port likely couldn't be reached. You passed 'RemoteServerAddress' as: #arguments.RemoteServerAddress#" />
 				</cfif>
 
+				<cfif cfcatch.type IS "java.net.URL" >
+					<cfthrow message="Error while creating browser" detail="Could not create a RemoteWebDriver instance. Either no legal protocol (http or https) could be found in the parsed remote address or it is not a well-formed, valid IP: #finalRemoteAddress#" />
+				</cfif>
+				
 				<cfif cfcatch.type IS "org.openqa.selenium.WebDriverException" AND structKeyExists(cfcatch, "message") AND FindNoCase("The requested URL /session was not found on this server", cfcatch.message) GT 0 >
 					<cfthrow message="Error while creating browser" detail="Could not create a RemoteWebDriver instance. The remote address is reachable, but is not responding. Likely the port is missing, not open or not correct. You passed 'RemoteServerAddress' as: #arguments.RemoteServerAddress#" />
 				</cfif>
