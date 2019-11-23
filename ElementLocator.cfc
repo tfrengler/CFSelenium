@@ -1,14 +1,13 @@
 <cfcomponent output="false" modifier="final" hint="An interface/facade that is injected into Browser.cfc (composition). It contains handy methods designed to easily grab elements with a minimum of fuss using specific, commonly used attributes such as id, class, title, name etc. All the methods (with a few exceptions) operate using cssSelectors." >
-<cfprocessingdirective pageencoding="utf-8" />
 
 	<cfset variables.oWrappedBrowser = "" />
 	<cfset variables.eventManager = "" />
 
 	<!--- CONSTRUCTOR --->
 
-	<cffunction name="init" returntype="Components.ElementLocator" access="public" hint="Constructor" >
-		<cfargument name="browserReference" type="Components.Browser" required="true" />
-		<cfargument name="eventManagerReference" type="Components.EventManager" required="false" />
+	<cffunction name="init" returntype="ElementLocator" access="public" hint="Constructor" >
+		<cfargument name="browserReference" type="Browser" required="true" />
+		<cfargument name="eventManagerReference" type="EventManager" required="false" />
 
 		<cfset variables.oWrappedBrowser = arguments.browserReference />
 

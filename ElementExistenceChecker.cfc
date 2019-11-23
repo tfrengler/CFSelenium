@@ -7,9 +7,9 @@
 
 	<!--- CONSTRUCTOR --->
 
-	<cffunction name="init" returntype="Components.ElementExistenceChecker" access="public" hint="Constructor" >
-		<cfargument name="browserReference" type="Components.Browser" required="true" />
-		<cfargument name="eventManagerReference" type="Components.EventManager" required="false" />
+	<cffunction name="init" returntype="ElementExistenceChecker" access="public" hint="Constructor" >
+		<cfargument name="browserReference" type="Browser" required="true" />
+		<cfargument name="eventManagerReference" type="EventManager" required="false" />
 
 		<cfset variables.oWrappedBrowser = arguments.browserReference />
 

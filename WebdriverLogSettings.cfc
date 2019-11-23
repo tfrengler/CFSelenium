@@ -1,8 +1,7 @@
 <cfcomponent output="false" hint="" >
-<cfprocessingdirective pageencoding="utf-8" />
 
-	<cfset oJavaLoggingPreferences = "" />
-	<cfset aLogSettings = arrayNew(1) />
+	<cfset variables.oJavaLoggingPreferences = "" />
+	<cfset variables.aLogSettings = [] />
 
 	<cffunction name="getJavaLogPreferences" returntype="any" access="public" hint="" output="true" >
 		<cfreturn variables.oJavaLoggingPreferences />
@@ -12,7 +11,7 @@
 		<cfreturn variables.aLogSettings />
 	</cffunction>
 
-	<cffunction name="init" returntype="Components.WebdriverLogSettings" access="public" hint="" >
+	<cffunction name="init" returntype="WebdriverLogSettings" access="public" hint="" >
 		<cfargument name="settings" type="array" required="true" hint="An array of arrays with 2 text entries: the log type, and the log level." />
 		<cfargument name="javaLoader" type="any" required="false" hint="A reference to Mark Mandel's Javaloader-component" />
 

@@ -1,10 +1,9 @@
 <cfcomponent output="false" modifier="final" hint="A wrapper for Selenium's Java By-class that represents the mechanism used to fetch elements from the DOM" >
-<cfprocessingdirective pageencoding="utf-8" />
 
 	<cfset variables.oSeleniumLocator = "" />
 	<cfset variables.sLocatorString = "" />
 	<cfset variables.sLocatorMechanism = "" />
-	<cfset variables.aJavascriptArguments = arrayNew(1) />
+	<cfset variables.aJavascriptArguments = [] />
 
 	<cfset variables.aValidLocators = [ 
 		"id",
@@ -20,11 +19,11 @@
 
 	<!--- CONSTRUCTOR --->
 
-	<cffunction name="init" returntype="Components.Locator" access="public" hint="Constructor" >
+	<cffunction name="init" returntype="Locator" access="public" hint="Constructor" >
 		<cfargument name="javaByReference" type="any" required="true" />
 		<cfargument name="searchFor" type="string" required="true" />
 		<cfargument name="locateUsing" type="string" required="true" />
-		<cfargument name="javascriptArguments" type="array" required="false" default="#arrayNew(1)#" />
+		<cfargument name="javascriptArguments" type="array" required="false" default="#[]#" />
 
 		<cfif isObject(arguments.javaByReference) IS false >
 			<cfthrow message="Error initializing Locator" detail="Argument 'javaByReference' does not appear to be an object" />

@@ -1,5 +1,4 @@
 <cfcomponent output="false" modifier="final" hint="Coldfusion representation of a DOM-element, acting as a wrapper for Selenium's org.openqa.selenium.remote.RemoteWebElement-class." >
-<cfprocessingdirective pageencoding="utf-8" />
 
 	<cfset variables.oWrappedBrowser = "" /> <!--- CF-component reference --->
 	<cfset variables.oJavaWebElement = "" /> <!--- Java-object reference --->
@@ -9,11 +8,11 @@
 
 	<!--- CONSTRUCTOR --->
 
-	<cffunction name="init" returntype="Components.Element" access="public" hint="Constructor" >
+	<cffunction name="init" returntype="Element" access="public" hint="Constructor" >
 		<cfargument name="webElementReference" type="any" required="true" hint="A reference to the Java remote.RemoteWebElement-class." />
-		<cfargument name="locatorReference" type="Components.Locator" required="false" hint="A reference to the Locator-instance that was used to find this element." />
-		<cfargument name="browserReference" type="Components.Browser" required="true" hint="A reference to the Browser-instance that was used to fetch this element." />
-		<cfargument name="eventManagerReference" type="Components.EventManager" required="false" />
+		<cfargument name="locatorReference" type="Locator" required="false" hint="A reference to the Locator-instance that was used to find this element." />
+		<cfargument name="browserReference" type="Browser" required="true" hint="A reference to the Browser-instance that was used to fetch this element." />
+		<cfargument name="eventManagerReference" type="EventManager" required="false" />
 
 		<cfset var stSelectElementArguments = {
 			elementReference=this
@@ -36,7 +35,7 @@
 		<cfset variables.oWrappedBrowser = arguments.browserReference />
 
 		<cfif isSelectTag() >
-			<cfset variables.oSelectInterface = new Components.SelectElement(argumentCollection = stSelectElementArguments) />
+			<cfset variables.oSelectInterface = new SelectElement(argumentCollection = stSelectElementArguments) />
 		</cfif>
 
 		<cfreturn this />
@@ -44,11 +43,11 @@
 
 	<!--- PUBLIC SETTERS/GETTERS --->
 
-	<cffunction name="getWrappedBrowser" returntype="Components.Browser" access="public" hint="Returns a reference to the Browser-component that is wrapped around this Element-instance." >
+	<cffunction name="getWrappedBrowser" returntype="Browser" access="public" hint="Returns a reference to the Browser-component that is wrapped around this Element-instance." >
 		<cfreturn variables.oWrappedBrowser />
 	</cffunction>
 
-	<cffunction name="getLocator" returntype="Components.Locator" access="public" hint="Returns a reference to the Locator-instance that was used to fetch this element." >
+	<cffunction name="getLocator" returntype="Locator" access="public" hint="Returns a reference to the Locator-instance that was used to fetch this element." >
 		<cfreturn variables.oLocator />
 	</cffunction>
 
@@ -56,7 +55,7 @@
 		<cfreturn variables.oJavaWebElement />
 	</cffunction>
 
-	<cffunction name="select" returntype="Components.SelectElement" access="public" hint="Returns a reference to the interface used for interacting with the special functions of a select-tag. If this element is not a select-tag then an error will be thrown" >
+	<cffunction name="select" returntype="SelectElement" access="public" hint="Returns a reference to the interface used for interacting with the special functions of a select-tag. If this element is not a select-tag then an error will be thrown" >
 		<cfif isSelectTag() IS false >
 			<cfthrow message="Error getting select-tag interface" detail="You can't use select-methods on this element because it's not a select-tag. Tag: #getTagName()# | id: #getID()# | Name: #getName()# | Class: #getClassName()# | Locator string: #variables.oLocator.getLocatorString()# | Locator mechanism: #variables.oLocator.getLocatorMechanism()#" />
 		</cfif>
@@ -186,7 +185,7 @@
 		<cfreturn variables.oJavaWebElement.isSelected() />
 	</cffunction>
 
-	<cffunction name="selectIfNotSelected" returntype="Components.Element" access="public" hint="Selects this element if it's de-selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
+	<cffunction name="selectIfNotSelected" returntype="Element" access="public" hint="Selects this element if it's de-selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -198,7 +197,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="deselectIfSelected" returntype="Components.Element" access="public" hint="De-selects this element if it's already selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
+	<cffunction name="deselectIfSelected" returntype="Element" access="public" hint="De-selects this element if it's already selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -210,7 +209,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="write" returntype="Components.Element" access="public" hint="Simulate typing into this element. For some elements this will manipulate the value-attribute" >
+	<cffunction name="write" returntype="Element" access="public" hint="Simulate typing into this element. For some elements this will manipulate the value-attribute" >
 		<cfargument name="text" type="array" required="true" hint="An array with each entry being a string that will be typed into the element" />
 		<cfargument name="addToExistingText" type="boolean" required="false" default="false" hint="By default whatever text is already in the element will be cleared. Pass this as true to add to the existing text instead." />
 		<cfargument name="convertToStrings" type="boolean" required="false" default="true" hint="Use this to turn off the forced conversion all the array values from parameter 'text' to string. Selenium will throw an exception if a value in the array is NOT a string." />
@@ -250,7 +249,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="click" returntype="Components.Element" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0." >
+	<cffunction name="click" returntype="Element" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0." >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -270,7 +269,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="clickUsingEnter" returntype="Components.Element" access="public" hint="An alternative to click(), which uses the keyboard to press 'Enter' on the element instead of clicking with the mouse." >
+	<cffunction name="clickUsingEnter" returntype="Element" access="public" hint="An alternative to click(), which uses the keyboard to press 'Enter' on the element instead of clicking with the mouse." >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -290,7 +289,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="clickUsingJS" returntype="Components.Element" access="public" hint="An alternative to click(), which uses Javascript to invoke the click()-method on the element instead of clicking with the mouse." >
+	<cffunction name="clickUsingJS" returntype="Element" access="public" hint="An alternative to click(), which uses Javascript to invoke the click()-method on the element instead of clicking with the mouse." >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -310,7 +309,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="clearText" returntype="Components.Element" access="public" hint="Clear this element's value, if this element is a text element (input and textarea)" >
+	<cffunction name="clearText" returntype="Element" access="public" hint="Clear this element's value, if this element is a text element (input and textarea)" >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -334,7 +333,7 @@
 	</cffunction>
 
 	<cffunction name="getElement" returntype="any" access="public" hint="Returns either the FIRST element or an array of ALL elements that matches your locator, which are nested within this element. This method will throw an error if NO elements are found when searching for single element." >
-		<cfargument name="locator" type="Components.Locator" required="true" hint="An instance of the locator mechanism you want to use to search for the elements" />
+		<cfargument name="locator" type="Locator" required="true" hint="An instance of the locator mechanism you want to use to search for the elements" />
 		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#variables.oWrappedBrowser.getFetchHiddenElements()#" hint="Use this to determine whether to return only elements that are considered visible or not." />
 		<cfargument name="multiple" type="boolean" required="false" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
@@ -348,7 +347,7 @@
 		<cfreturn variables.oWrappedBrowser.getElement(argumentCollection = stGetElementsArguments) />
 	</cffunction>
 
-	<cffunction name="getParentElement" returntype="Components.Element" access="public" hint="Returns the parent element of this element" >
+	<cffunction name="getParentElement" returntype="Element" access="public" hint="Returns the parent element of this element" >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -363,7 +362,7 @@
 
 	</cffunction>
 
-	<cffunction name="getPreviousSiblingElement" returntype="Components.Element" access="public" hint="Returns the previous (upper) sibling/neighbour-element of this element" >
+	<cffunction name="getPreviousSiblingElement" returntype="Element" access="public" hint="Returns the previous (upper) sibling/neighbour-element of this element" >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -387,7 +386,7 @@
 		</cftry>
 	</cffunction>
 
-	<cffunction name="getNextSiblingElement" returntype="Components.Element" access="public" hint="Returns the next (lower) sibling/neighbour-element of this element" >
+	<cffunction name="getNextSiblingElement" returntype="Element" access="public" hint="Returns the next (lower) sibling/neighbour-element of this element" >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -431,7 +430,7 @@
 		<cfreturn aReturnData />
 	</cffunction>
 
-	<cffunction name="getFirstChildElement" returntype="Components.Element" access="public" hint="Returns the FIRST element that is a direct child of this element." >
+	<cffunction name="getFirstChildElement" returntype="Element" access="public" hint="Returns the FIRST element that is a direct child of this element." >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -456,7 +455,7 @@
 
 	</cffunction>
 
-	<cffunction name="getLastChildElement" returntype="Components.Element" access="public" hint="Returns the LAST element that is a direct child of this element." >
+	<cffunction name="getLastChildElement" returntype="Element" access="public" hint="Returns the LAST element that is a direct child of this element." >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -480,7 +479,7 @@
 		</cftry>
 	</cffunction>
 
-	<cffunction name="scrollToAndFocusOn" returntype="Components.Element" access="public" hint="Moves the mouse to this element which causes it to be scrolled into view" >
+	<cffunction name="scrollToAndFocusOn" returntype="Element" access="public" hint="Moves the mouse to this element which causes it to be scrolled into view" >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
@@ -502,7 +501,7 @@
 		<cfreturn this />
 	</cffunction>
 
-	<cffunction name="scrollIntoView" returntype="Components.Element" access="public" hint="Scrolls this element into view but does not focus on it. Similar in many ways to scrollToAndFocusOn(), but is a more unstable solution that uses the Y-position of the viewport and the element to determine if the element is out of view, and then executes JS to scroll to the element. Consider it an (expensive) alternative to scrollToAndFocusOn, which is the recommended method." >
+	<cffunction name="scrollIntoView" returntype="Element" access="public" hint="Scrolls this element into view but does not focus on it. Similar in many ways to scrollToAndFocusOn(), but is a more unstable solution that uses the Y-position of the viewport and the element to determine if the element is out of view, and then executes JS to scroll to the element. Consider it an (expensive) alternative to scrollToAndFocusOn, which is the recommended method." >
 		<cfif isObject(variables.eventManager) >
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
