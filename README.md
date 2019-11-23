@@ -5,11 +5,15 @@ This framework aims to do the pretty much the same as teamcfadvance's CFSelenium
 
 I don't claim this is better; in fact it's approach is quite different - as this is full framework that abstracts and exposes Selenium in very specific ways to suit our company's needs.
 
-**LICENSE**
+**IMPORTANT NOTE:**
+
+I have recently switched employer and no longer use this framework professionally. As such it's likely not going to be updated anymore or at least not very frequently.
+
+**LICENSE:**
 
 MIT License
 
-Copyright (c) 2018 Thomas Grud Frengler
+Copyright (c) 2019 Thomas Grud Frengler
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,12 +40,12 @@ teamcfadvance's CFSelenium was sadly not in a working state at that point and wi
 
 **USAGE:**
 
-I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will not be extended according to feedback. It's public  mostly for educational/curiosty reasons, so that anyone else who might want to see how Coldfusion and Selenium working together could be achieved and realized as a fully fledged framework. It's built completely towards my company's way - and mine, as the chief architect - of working and is not meant to be easy for others to implement and use. That was the original intention when I put it on GitHub, but as time went on, it became clear that it was practically impossible to keep developing it for our use while not locking it down or restricting it for the public.
+I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will not be extended according to feedback. It's public mostly for educational/curiosty reasons, so that anyone else who might want to see how Coldfusion and Selenium working together could be achieved and realized as a fully fledged framework. It's built completely towards my company's way - and mine, as the chief architect - of working and it was never meant to be easy for others to implement and use. Although easy of use was the original intention when I put it on GitHub, as time went on, it became clear that it was practically impossible to keep developing it for our use while not locking it down or restricting it for the public.
 
 **REQUIREMENTS**
 
-Lucee 5+
-Supports the use of Mark Mandel's **Javaloader**, although with the move to Lucee-only it's likely to be removed.
+Lucee 5+ | Our company moved from ACF to Lucee a while ago, and since then I have started making use of Lucee-only code. Apologies for any ACF-users out there.
+Supports the use of Mark Mandel's **Javaloader**, although with the move to Lucee-only it might get deprecated or removed.
 
 **BASIC USAGE**
 
@@ -62,14 +66,14 @@ To create a browser you use WebdriverManager.cfc like this:
 Once you have the browser you can start getting element using the shorthand methods from **getElementBy()**, or for more advanced use by using **getElement()**:
 
 ```coldfusion
-<cfset UsernameElement = oBrowser.getElementBy().name(name="Username", onlyElementsOfTag="input") />
+<cfset UsernameElement = Browser.getElementBy().name(name="Username", onlyElementsOfTag="input") />
 ```
 
 __OR__
 
 ```coldfusion
-<cfset UsernameElement = oBrowser.getElement(
-	locator=oBrowser.createLocator(
+<cfset UsernameElement = Browser.getElement(
+	locator=Browser.createLocator(
 		searchFor="input[name='Username']",
 		locateUsing="cssSelector"
 	)
