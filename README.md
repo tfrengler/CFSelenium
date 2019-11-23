@@ -42,12 +42,19 @@ teamcfadvance's CFSelenium was sadly not in a working state at that point and wi
 
 I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will not be extended according to feedback. It's public mostly for educational/curiosty reasons, so that anyone else who might want to see how Coldfusion and Selenium working together could be achieved and realized as a fully fledged framework. It's built completely towards my company's way - and mine, as the chief architect - of working and it was never meant to be easy for others to implement and use. Although easy of use was the original intention when I put it on GitHub, as time went on, it became clear that it was practically impossible to keep developing it for our use while not locking it down or restricting it for the public.
 
-**REQUIREMENTS**
+**REQUIREMENTS:**
 
-Lucee 5+ | Our company moved from ACF to Lucee a while ago, and since then I have started making use of Lucee-only code. Apologies for any ACF-users out there.
-Supports the use of Mark Mandel's **Javaloader**, although with the move to Lucee-only it might get deprecated or removed.
+* **Lucee 5+** | Our company moved from ACF to Lucee a while ago, and since then I have started making use of Lucee-only code. Apologies for any ACF-users out there.
+* Supports the use of Mark Mandel's **Javaloader**, although with the move to Lucee-only it might get deprecated or removed.
 
-**BASIC USAGE**
+**SETUP:**
+
+* Download the **Java**-bindings from Selenium's website. Unzip the file, find ALL the **jar**-files and put them in some directory somewhere. 
+* Now load those into your Lucee-application somehow so that the code can access it. Either do it via Application.cfc using **javasettings.loadPath**, via **Javaloader** or edit Lucee's config to include / load the jar-files directly. The latter version is not recommended as conflicting classes/packages will cause Lucee to prioritize its own over Selenium's.
+* Find a way to load the CFC's from this repo. My approach previously was to "hardcode" the path (the code expected subfolder called **Components**) but you can put it anywhere you want. Either set it up via mappings in the **Application.cfc** or add mappings via **Lucee admin.**
+* Follow "basic usage" below.
+
+**BASIC USAGE:**
 
 Basic usage is via the webdriver (**Browser.cfc**) which finds and returns HTML-elements (**Element.cfc**) for you.
 
