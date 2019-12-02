@@ -1,5 +1,4 @@
 <cfcomponent output="false" hint="An interface/facade that is injected into Element.cfc (composition). It's a wrapper for Selenium's support.ui.Select-class, and contains methods specifically for interacting with select-tags." >
-<cfprocessingdirective pageencoding="utf-8" />
 
 	<cfset variables.oJavaSelectInterface = "" />
 	<cfset variables.oWrappedElement = "" />
@@ -57,7 +56,7 @@
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
 
-		<cfset var aListOfOptionsAsCFObjects = arrayNew(1) />		
+		<cfset var aListOfOptionsAsCFObjects =[] />		
 		<cfset var aListOfOptionsAsJavaObjects = variables.oJavaSelectInterface.getOptions() />
 		<cfset var oCurrentWebElement = "" />
 		<cfset var oElement = "" />
@@ -89,7 +88,7 @@
 			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
 		</cfif>
 
-		<cfset var aListOfOptionsAsCFObjects = arrayNew(1) />		
+		<cfset var aListOfOptionsAsCFObjects = [] />		
 		<cfset var aListOfOptionsAsJavaObjects = variables.oJavaSelectInterface.getAllSelectedOptions() />
 		<cfset var oCurrentWebElement = "" />
 		<cfset var oElement = "" />

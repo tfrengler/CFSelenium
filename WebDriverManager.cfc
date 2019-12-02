@@ -178,11 +178,11 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		</cfif>
 
 		<cfif isObject(oJavaLoader) >
-			<cfset oBrowserOptions = oJavaLoader.create("org.openqa.selenium.#variables.stBrowserData.seleniumJavaPackageName#.#variables.stBrowserData.browserOptionsJarName#").init() />
+			<cfset oBrowserOptions = oJavaLoader.create("org.openqa.selenium.#stBrowserData.seleniumJavaPackageName#.#stBrowserData.browserOptionsJarName#").init() />
 			<cfset oBrowserDesiredCapabilities = oJavaLoader.create("org.openqa.selenium.remote.DesiredCapabilities") />
 			<cfset stBrowserArguments.javaLoaderReference = arguments.javaLoaderReference />
 		<cfelse>
-			<cfset oBrowserOptions = createObject("java", "org.openqa.selenium.#variables.stBrowserData.seleniumJavaPackageName#.#variables.stBrowserData.browserOptionsJarName#").init() />
+			<cfset oBrowserOptions = createObject("java", "org.openqa.selenium.#stBrowserData.seleniumJavaPackageName#.#stBrowserData.browserOptionsJarName#").init() />
 			<cfset oBrowserDesiredCapabilities = createObject("java", "org.openqa.selenium.remote.DesiredCapabilities") />
 		</cfif>
 
@@ -297,9 +297,9 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 			</cfif>
 
 			<cfif isObject(oJavaLoader) >
-				<cfset stBrowserArguments.webDriverReference = oJavaLoader.create("org.openqa.selenium.#LCase(arguments.browser)#.#variables.stBrowserData.internalDriverName#").init(oBrowserCapabilities) />
+				<cfset stBrowserArguments.webDriverReference = oJavaLoader.create("org.openqa.selenium.#LCase(arguments.browser)#.#stBrowserData.internalDriverName#").init(oBrowserCapabilities) />
 			<cfelse>
-				<cfset stBrowserArguments.webDriverReference = createObject("java", "org.openqa.selenium.#LCase(arguments.browser)#.#variables.stBrowserData.internalDriverName#").init(oBrowserCapabilities) />
+				<cfset stBrowserArguments.webDriverReference = createObject("java", "org.openqa.selenium.#LCase(arguments.browser)#.#stBrowserData.internalDriverName#").init(oBrowserCapabilities) />
 			</cfif>
 		</cfif>
 		<!--- Be aware that as SOON as the webdriver (either local or remote version) is invoked the webdriver binary will be started (and the browser opens, whether silent or not) --->
