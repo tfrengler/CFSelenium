@@ -3,20 +3,13 @@
 	<!--- PROPERTIES --->
 
 	<cfset variables.oWrappedBrowser = "" />
-	<cfset variables.eventManager = "" />
 
 	<!--- CONSTRUCTOR --->
 
 	<cffunction name="init" returntype="ElementExistenceChecker" access="public" hint="Constructor" >
 		<cfargument name="browserReference" type="Browser" required="true" />
-		<cfargument name="eventManagerReference" type="EventManager" required="false" />
 
 		<cfset variables.oWrappedBrowser = arguments.browserReference />
-
-		<cfif structKeyExists(arguments, "eventManagerReference") >
-			<cfset variables.eventManager = arguments.eventManagerReference />
-		</cfif>
-
 		<cfreturn this />
 	</cffunction>
 
@@ -27,10 +20,6 @@
 		<cfargument name="tagType" type="string" required="false" default="*" />
 		<cfargument name="textMustMatchCompletely" type="boolean" required="false" default="true" />
 		<cfargument name="getByDirectDescendantTextNodeOnly" type="boolean" required="false" default="false" />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var sCheckForElementsScript = "" />
 		<cfset var sXpathTextBehaviourOperator = "." />
@@ -76,10 +65,6 @@
 		<cfargument name="value" type="string" required="false" default="" hint="" />
 		<cfargument name="operator" type="string" required="false" default="" hint="" />
 		<cfargument name="tagType" type="string" required="false" default="" hint="" />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var sSearchString = "#arguments.tagType#[#arguments.attribute##arguments.operator#='#jsStringFormat(arguments.value)#']" />
 

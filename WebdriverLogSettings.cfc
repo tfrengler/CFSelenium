@@ -1,6 +1,6 @@
-<cfcomponent output="false" hint="" >
+<cfcomponent output="false" modifier="final" hint="A wrapper for Selenium's various logging options. These can safety be passed to all browsers, but not all log settings are supported by every browser type." >
 
-	<cfset variables.oJavaLoggingPreferences = "" />
+	<cfset variables.oJavaLoggingPreferences = nullValue() />
 	<cfset variables.aLogSettings = [] />
 
 	<cffunction name="getJavaLogPreferences" returntype="any" access="public" hint="" output="true" >
@@ -13,7 +13,7 @@
 
 	<cffunction name="init" returntype="WebdriverLogSettings" access="public" hint="" >
 		<cfargument name="settings" type="array" required="true" hint="An array of arrays with 2 text entries: the log type, and the log level." />
-		<cfargument name="javaLoader" type="any" required="false" hint="A reference to Mark Mandel's Javaloader-component" />
+		<cfargument name="seleniumFactory" type="SeleniumObjectFactory" required="true" />
 
 		<!--- 
 			Valid log levels:
@@ -23,17 +23,9 @@
 			BROWSER, CLIENT, DRIVER, PERFORMANCE, PROFILER, SERVER
 		--->
 
-		<cfset var oLoggingPreferences = "" />
-		<cfset var oLogType = "" />
+		<cfset var oLoggingPreferences = arguments.seleniumFactory.get("org.openqa.selenium.logging.LoggingPreferences").init() />
+		<cfset var oLogType = arguments.seleniumFactory.get("org.openqa.selenium.logging.LogType") />
 		<cfset var oLogLevel = createObject("java", "java.util.logging.Level") />
-
-		<cfif structKeyExists(arguments, "javaLoader") AND isObject(arguments.javaLoader) >
-			<cfset oLoggingPreferences = arguments.javaLoader.create("org.openqa.selenium.logging.LoggingPreferences").init() />
-			<cfset oLogType = arguments.javaLoader.create("org.openqa.selenium.logging.LogType") />
-		<cfelse>
-			<cfset oLoggingPreferences = createObject("java", "org.openqa.selenium.logging.LoggingPreferences").init() />
-			<cfset oLogType = createObject("java", "org.openqa.selenium.logging.LogType") />
-		</cfif>
 
 		<cfloop array="#arguments.settings#" index="aCurrentSetting" >
 			<cfif NOT isArray(aCurrentSetting) >

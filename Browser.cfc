@@ -1,38 +1,28 @@
 <cfcomponent output="false" modifier="final" hint="Coldfusion representation of a browser, acting as a Coldfusion wrapper for Selenium's org.openqa.selenium.remote.RemoteWebDriver-class. Not all Selenium's Java methods are abstracted, but you can still access the original Java object using a public method." >
 
-	<cfset variables.oJavaWebDriver = "" /> <!--- Java object --->
-	<cfset variables.oJavaBy = "" /> <!--- Java object --->
-	<cfset variables.oElementLocator = "" /> <!--- CF component --->
-	<cfset variables.oElementExistenceChecker = "" /> <!--- CF component --->
+	<cfset variables.oJavaWebDriver = nullValue() /> <!--- Java object --->
+	<cfset variables.oJavaBy = nullValue() /> <!--- Java object --->
+	<cfset variables.oElementLocator = nullValue() /> <!--- CF component --->
+	<cfset variables.oElementExistenceChecker = nullValue() /> <!--- CF component --->
 	<cfset variables.nWaitForDOMReadyStateTimeOut = 0 />
 	<cfset variables.bFetchHiddenElements = false />
 	<cfset variables.bUseStrictVisibilityCheck = true />
-	<cfset variables.oJavaLoader = "" />
-	<cfset variables.eventManager = "" />
+	<cfset variables.seleniumFactory = nullValue() />
 
 	<!--- CONSTRUCTOR --->
 
 	<cffunction name="init" returntype="Browser" access="public" hint="Constructor" >
 		<cfargument name="webDriverReference" type="any" required="true" hint="" />
 		<cfargument name="waitForDOMReadyStateTimeOut" type="numeric" required="false" default="30" />
-		<cfargument name="javaLoaderReference" type="any" required="false" />
-		<cfargument name="eventManagerReference" type="EventManager" required="false" />
+		<cfargument name="seleniumFactory" type="SeleniumObjectFactory" required="true" />
 
-		<cfif isObject(arguments.WebDriverReference) IS false >
-			<cfthrow message="Error when initializing Browser" detail="Argument 'WebDriverReference' is not an object" />
+		<cfset variables.seleniumFactory = arguments.seleniumFactory />
+
+		<cfif isObject(arguments.webDriverReference) IS false >
+			<cfthrow message="Error when initializing Browser" detail="Argument 'webDriverReference' is not an object" />
 		</cfif>
 
-		<cfif structKeyExists(arguments, "eventManagerReference") >
-			<cfset variables.eventManager = arguments.eventManagerReference />
-		</cfif>
-
-		<cfif structKeyExists(arguments, "javaLoaderReference") AND isObject(arguments.javaLoaderReference) >
-			<cfset variables.oJavaLoader = arguments.javaLoaderReference />
-			<cfset variables.oJavaBy = arguments.javaLoaderReference.create("org.openqa.selenium.By") />
-		<cfelse>
-			<cfset variables.oJavaBy = createObject("java", "org.openqa.selenium.By") />
-		</cfif>
-
+		<cfset variables.oJavaBy = variables.seleniumFactory.get("org.openqa.selenium.By") />
 		<cfset variables.oElementLocator = new ElementLocator(browserReference=this) />
 		<cfset variables.oElementExistenceChecker = new ElementExistenceChecker(browserReference=this) />
 
@@ -100,10 +90,6 @@
 			<cfloop array="#aElementsFoundInDOM#" index="oCurrentWebElement" >
 				<cfset stElementArguments.webElementReference = oCurrentWebElement />
 				<cfset stElementArguments.locatorReference = arguments.locator />
-				
-				<cfif isObject(variables.eventManager) >
-					<cfset stElementArguments.eventManagerReference = variables.eventManager />
-				</cfif>
 
 				<cfif arguments.locateHiddenElements IS false >
 
@@ -159,10 +145,6 @@
 	<cffunction name="useStrictVisibilityCheck" returntype="void" access="public" hint="Enable or disable the strict visibility check for fetching elements. The stricter check requires elements to be clickable (so not obscured behind other elements) and to be within the viewport. This is addition to the element required to be displayed, visible and have a height or width greater than 0." >
 		<cfargument name="enable" type="boolean" required="true" />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset variables.bUseStrictVisibilityCheck = arguments.enable />
 	</cffunction>
 
@@ -170,8 +152,8 @@
 		<cfreturn variables.bFetchHiddenElements />
 	</cffunction>
 
-	<cffunction name="getJavaloader" returntype="any" access="public" hint="Returns a reference to the Javaloader. This is public because the injected can then get it without us having to pass it on via init each time." >
-		<cfreturn variables.oJavaLoader />
+	<cffunction name="getSeleniumFactory" returntype="any" access="public" hint="Returns a reference to the SeleniumObjectFactory. This is public because the injected components can then get it without us having to pass it on via init each time." >
+		<cfreturn variables.seleniumFactory />
 	</cffunction>
 
 	<cffunction name="getJavaWebDriver" returntype="any" access="public" hint="Gets you a reference to the Java org.openqa.selenium.remote.RemoteWebDriver-class. The reason this is publicly exposed is because not all the Java methods have been abstracted so if you want (and you know what you are doing) you can access them directly." >
@@ -180,10 +162,6 @@
 
 	<cffunction name="setImplicitWait" returntype="void" access="public" hint="Use this method to enable or disable Selenium's mechanism for waiting while locating DOM elements. It's important to realize that this just makes the webdriver waits until the element is present in the DOM; it does not care about whether it's visible or clickable. NOTE: This lives alongside our own custom wait mechanism, which is meant for waiting for AJAX-calls to finish." >
 		<cfargument name="timeout" type="numeric" required="false" default=0 hint="The timeout in seconds to wait for a DOM element to be located before proceeding. You can disable it by setting the timeout to 0, which is Selenium's default value." />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfif isValid("integer", arguments.timeout) IS false >
 			<cfthrow message="Error when setting implicit wait" detail="Argument 'timeout' must be a valid integer!" />
@@ -201,10 +179,6 @@
 	<cffunction name="fetchHiddenElements" returntype="void" access="public" hint="Enable this to make the fetch-methods only return elements that are considered visible. Elements are not visible if their CSS values are set to display: none, visibility: hidden, they are obscured fully or partially behind other elements or they have no width and height." >
 		<cfargument name="value" type="boolean" required="yes" />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset variables.bFetchHiddenElements = arguments.value />
 	</cffunction>
 
@@ -220,10 +194,6 @@
 		<cfargument name="locator" type="Locator" required="true" hint="An instance of the locator mechanism you want to use to search for the element" />
 		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#variables.bFetchHiddenElements#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
 		<cfargument name="attempts" type="numeric" required="false" default="1" hint="Amount of times to attempt clicking the element, ignoring all exceptions while doing so" />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var nAttemptCount = 0 />
 		<cfset var bSuccess = false />
@@ -256,10 +226,6 @@
 		<cfargument name="locator" type="Locator" required="true" hint="An instance of the locator mechanism you want to use to search for the element" />
 		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#variables.bFetchHiddenElements#" hint="Use this to one-time override the default element fetch behaviour regarding returning only elements that are considered visible." />
 		<cfargument name="multiple" type="boolean" required="false" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var stFetchHTMLElementsArguments = arguments />
 		<cfset var aElementCollection = [] />
@@ -326,10 +292,6 @@
 	<cffunction name="navigateTo" returntype="void" access="public" hint="Load a new web page in the current browser window." >
 		<cfargument name="URL" type="string" required="true" />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cftry>
 			<cfset createObject("java", "java.net.URL").init( arguments.URL ) />
 
@@ -342,16 +304,12 @@
 	</cffunction>
 
 	<cffunction name="quit" returntype="void" access="public" hint="Quits this driver, closing every associated window." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
+		
 		<cfreturn variables.oJavaWebDriver.quit() />
 	</cffunction>
 
 	<cffunction name="close" returntype="void" access="public" hint="Close the current window, quitting the browser if it's the last window currently open." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
+		
 		<cfreturn variables.oJavaWebDriver.close() />
 	</cffunction>
 
@@ -359,10 +317,6 @@
 		<cfargument name="script" type="string" required="true" hint="The javascript code to be executed. Be careful to escape quotes and other special characters or it will break. Also ensure that you actually put a return-statement in your script if you expect data back." />
 		<cfargument name="parameters" type="array" required="false" default="#[]#" hint="Script arguments must be a number, a boolean, a string, RemoteWebElement, or an array of any of those combinations. The arguments will be made available to the JavaScript via the 'arguments' variable." />
 		<cfargument name="asynchronous" type="boolean" required="false" default="false" hint="Unlike executing synchronous JavaScript, scripts executed with this method must explicitly signal they are finished by invoking the provided callback. This callback is always injected into the executed function as the last argument." />
-		
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var ReturnDataFromScript = "" />
 
@@ -374,7 +328,7 @@
 		<cfset waitForDocumentToBeReady() />
 
 		<cftry>
-	 		<cfif arguments.Asynchronous >
+			<cfif arguments.Asynchronous >
 				<cfset ReturnDataFromScript = variables.oJavaWebDriver.executeAsyncScript(
 					arguments.script,
 					aJavascriptArguments
@@ -424,25 +378,15 @@
 	<cffunction name="takeScreenshot" returntype="any" access="public" hint="Capture a screenshot of the window currently in focus as PNG." >
 		<cfargument name="format" type="string" required="false" default="bytes" hint="The format you want the screenshot returned as. Can return either base64, raw bytes or a java.io.File-object. Valid parameter strings are: 'bytes', 'base64' or 'file'." />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
+		<cfset var sValidFormats = "bytes,base64,file" />
+		<cfset var oOutputType = variables.seleniumFactory.get("org.openqa.selenium.OutputType") />
+		<cfset var type = "" />
+		<cfset var screenshot = "" />
 
- 		<cfset var sValidFormats = "bytes,base64,file" />
- 		<cfset var oOutputType = "" />
- 		<cfset var Type = "" />
- 		<cfset var Screenshot = "" />
+		<cfif listFindNoCase(sValidFormats, arguments.format) GT 0 >
 
- 		<cfif isObject(variables.oJavaLoader) >
-			<cfset oOutputType = variables.oJavaLoader.create("org.openqa.selenium.OutputType") />
-		<cfelse>
-			<cfset oOutputType = createObject("java", "org.openqa.selenium.OutputType") />
-		</cfif>
-
- 		<cfif listFindNoCase(sValidFormats, arguments.format) GT 0 >
-
-			<cfset Type = oOutputType[ uCase(arguments.format) ] />
-			<cfset Screenshot = variables.oJavaWebDriver.getScreenshotAs(Type) />
+			<cfset type = oOutputType[ uCase(arguments.format) ] />
+			<cfset screenshot = variables.oJavaWebDriver.getScreenshotAs(type) />
 
 		<cfelse>
 			<cfthrow message="Error taking screenshot" detail="Argument 'Format' that you passed as '#arguments.format#' is not a valid format type. Valid formats are: #sValidFormats#" />	
@@ -456,10 +400,6 @@
 		<cfargument name="locateUsing" type="string" required="true" hint="The locator mechanism you want to use to find the element(s). Valid locators are: id,cssSelector,xpath,name,className,linkText,partialLinkText,tagName,javascript" />
 		<cfargument name="javascriptArguments" type="array" required="false" default="#[]#" hint="Arguments for the javascript locator. Script arguments must be a number, a boolean, a string, RemoteWebElement, or an array of any of those combinations" />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfreturn new Locator(
 			searchFor=arguments.searchFor,
 			locateUsing=arguments.locateUsing,
@@ -472,10 +412,6 @@
 		<cfargument name="condition" type="string" required="true" hint="The name of the condition you want to wait for" />
 		<cfargument name="elementOrLocator" type="any" required="true" hint="The argument for the condition. This is either a Locator or an Element. For some conditions it returns the element you passed or the element that would be found using the locator you passed. Some conditions (like invisibility) returns true once the condition is satisfied." />
 		<cfargument name="timeout" type="numeric" required="false" default="10" hint="How long the browser should wait (in seconds) before throwing an error" />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<!--- HUGE disclaimer: Conditions that use locators are not subject to visibility checks! --->
 
@@ -514,13 +450,8 @@
 			<cfthrow message="Error when waiting for condition" detail="Argument 'elementOrLocator' is not an instance of Locator.cfc or Element.cfc" />
 		</cfif>
 
-		<cfif isObject(variables.oJavaLoader) >
-			<cfset oExpectedConditions = variables.oJavaLoader.create("org.openqa.selenium.support.ui.ExpectedConditions") />
-			<cfset oWebdriverWait = variables.oJavaLoader.create("org.openqa.selenium.support.ui.WebDriverWait").init(variables.oJavaWebDriver, javaCast("long", arguments.timeout)) />
-		<cfelse>
-			<cfset oExpectedConditions = createObject("java", "org.openqa.selenium.support.ui.ExpectedConditions") />
-			<cfset oWebdriverWait = createObject("java", "org.openqa.selenium.support.ui.WebDriverWait").init(variables.oJavaWebDriver, javaCast("long", arguments.timeout)) />
-		</cfif>
+		<cfset oExpectedConditions = variables.seleniumFactory.get("org.openqa.selenium.support.ui.ExpectedConditions") />
+		<cfset oWebdriverWait = variables.seleniumFactory.get("org.openqa.selenium.support.ui.WebDriverWait").init(variables.oJavaWebDriver, javaCast("long", arguments.timeout)) />
 		
 		<cftry>
 			<cfset ReturnData = oWebdriverWait.until(
@@ -544,10 +475,6 @@
 				webElementReference=ReturnData,
 				locatorReference=arguments.elementOrLocator
 			} />
-
-			<cfif isObject(variables.eventManager) >
-				<cfset stElementArguments.eventManagerReference = variables.eventManager />
-			</cfif>
 
 			<cfreturn new Element(argumentCollection = stElementArguments) />
 

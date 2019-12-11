@@ -1,20 +1,13 @@
 <cfcomponent output="false" modifier="final" hint="An interface/facade that is injected into Browser.cfc (composition). It contains handy methods designed to easily grab elements with a minimum of fuss using specific, commonly used attributes such as id, class, title, name etc. All the methods (with a few exceptions) operate using cssSelectors." >
 
 	<cfset variables.oWrappedBrowser = "" />
-	<cfset variables.eventManager = "" />
 
 	<!--- CONSTRUCTOR --->
 
 	<cffunction name="init" returntype="ElementLocator" access="public" hint="Constructor" >
 		<cfargument name="browserReference" type="Browser" required="true" />
-		<cfargument name="eventManagerReference" type="EventManager" required="false" />
 
 		<cfset variables.oWrappedBrowser = arguments.browserReference />
-
-		<cfif structKeyExists(arguments, "eventManagerReference") >
-			<cfset variables.eventManager = arguments.eventManagerReference />
-		</cfif>
-
 		<cfreturn this />
 	</cffunction>
 
@@ -27,10 +20,6 @@
 		<cfargument name="onlyElementsOfTag" type="string" required="yes" hint="" />
 		<cfargument name="multiple" type="boolean" required="yes" hint="" />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="" />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "" />
@@ -72,10 +61,6 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "[title='#arguments.title#']" />
 		<cfset var oLocator = "" />
@@ -108,10 +93,6 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found. Note that ID's are supposed to be unique and that only 1 element will be fetched, even if multiple exist with the same ID. But this parameter is still useful for checking the presence of the element." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "###arguments.id#" />
 		<cfset var oLocator = "" />
@@ -143,10 +124,6 @@
 		<cfargument name="onlyElementsOfTag" type="string" required="no" default="" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with a certain class name (or names), rather than any element." />
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "#arguments.onlyElementsOfTag#.#arguments.className#" />
@@ -181,10 +158,6 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "[name='#arguments.name#']" />
 		<cfset var oLocator = "" />
@@ -218,10 +191,6 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "//#arguments.onlyElementsOfTag#[normalize-space(.)='#arguments.text#']" />
 		<cfset var oLocator = "" />
@@ -251,10 +220,6 @@
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "//#arguments.onlyElementsOfTag#[text()[contains(.,'#arguments.text#')]]" />
 		<cfset var oLocator = "" />
@@ -281,10 +246,6 @@
 		<cfargument name="type" type="string" required="yes" hint="The type of input element you want to search for." />
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "input[type='#arguments.type#']" />
@@ -313,10 +274,6 @@
 		<cfargument name="onlyElementsOfTag" type="string" required="no" default="*" hint="Specify a tag name to limit the search to only this type of HTML tag. So for example pass as 'div' to only search for divs with certain text content, rather than any element." />
 		<cfargument name="multiple" type="boolean" required="no" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 		<cfargument name="getLocator" type="boolean" required="no" default="false" hint="Returns the Locator used in the search instead of elements." />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var ReturnData = "" />
 		<cfset var sSearchString = "#arguments.onlyElementsOfTag#[value='#arguments.value#']" />

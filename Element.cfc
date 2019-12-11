@@ -4,7 +4,6 @@
 	<cfset variables.oJavaWebElement = "" /> <!--- Java-object reference --->
 	<cfset variables.oSelectInterface = "" /> <!--- CF-component reference --->
 	<cfset variables.oLocator = "" /> <!--- CF-component reference --->
-	<cfset variables.eventManager = "" />
 
 	<!--- CONSTRUCTOR --->
 
@@ -12,7 +11,6 @@
 		<cfargument name="webElementReference" type="any" required="true" hint="A reference to the Java remote.RemoteWebElement-class." />
 		<cfargument name="locatorReference" type="Locator" required="false" hint="A reference to the Locator-instance that was used to find this element." />
 		<cfargument name="browserReference" type="Browser" required="true" hint="A reference to the Browser-instance that was used to fetch this element." />
-		<cfargument name="eventManagerReference" type="EventManager" required="false" />
 
 		<cfset var stSelectElementArguments = {
 			elementReference=this
@@ -20,11 +18,6 @@
 
 		<cfif isObject(arguments.webElementReference) IS false >
 			<cfthrow message="Error setting Java WebElement" detail="Argument 'webElementReference' is not an object" />
-		</cfif>
-
-		<cfif structKeyExists(arguments, "eventManagerReference") >
-			<cfset variables.eventManager = arguments.eventManagerReference />
-			<cfset stSelectElementArguments.eventManagerReference = arguments.eventManagerReference />
 		</cfif>
 
 		<cfif structKeyExists(arguments, "locatorReference") >
@@ -66,30 +59,18 @@
 	<!--- PUBLIC METHODS --->
 
 	<cffunction name="getId" returntype="string" access="public" hint="Returns the ID-attribute of this element." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 		<cfreturn variables.oJavaWebElement.getAttribute("id") />
 	</cffunction>
 
 	<cffunction name="getClassName" returntype="string" access="public" hint="Returns the CSS class name of this element." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 		<cfreturn variables.oJavaWebElement.getAttribute("className") />
 	</cffunction>
 
 	<cffunction name="getTagName" returntype="string" access="public" hint="Returns the tag name of this element." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 		<cfreturn variables.oJavaWebElement.getTagName() />
 	</cffunction>
 
 	<cffunction name="getName" returntype="string" access="public" hint="Returns the Name-attribute of this element." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 		<cfreturn variables.oJavaWebElement.getAttribute("name") />
 	</cffunction>
 
@@ -101,10 +82,6 @@
 	<cffunction name="getTextContent" returntype="string" access="public" hint="Returns the visible text content. Textcontent means all the visible, inner text without any of the nested HTML-tags wrapped around them or their attributes. Example: calling this on the outer span of this: <span>Hello <span style='display: none;'>World</span></span> - would return 'Hello world'." >
 		<cfargument name="raw" type="boolean" required="false" default="false" hint="When passed, this returns the full text content, including all tabs, line feeds, line breaks, double-spaces etc" />
 		<cfargument name="trimExtra" type="boolean" required="false" default="false" hint="This will remove things that are not whitespace, so stuff like &nbsp; etc" />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfif arguments.raw OR variables.oJavaWebElement.getTagName() EQ "textarea" >
 			<cfreturn trim(variables.oJavaWebElement.getAttribute("textContent")) /> <!--- Only works in IE9+ --->
@@ -120,10 +97,6 @@
 	<cffunction name="getHTMLContent" returntype="string" access="public" hint="Returns the inner, nested HTML and their contents of this element." >
 		<cfargument name="encodeHTMLEntities" type="boolean" required="false" default="true" hint="Set to false to get all the special HTML entities returned in their original form, otherwise they will be encoded" />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset var sReturnData = variables.oJavaWebElement.getAttribute("innerHTML") />
 
 		<cfif arguments.encodeHTMLEntities >
@@ -134,19 +107,11 @@
 	</cffunction>
 
 	<cffunction name="getValue" returntype="string" access="public" hint="Returns the value-attribute of this element" >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfreturn variables.oJavaWebElement.getAttribute("value") />
 	</cffunction>
 
 	<cffunction name="getAttribute" returntype="string" access="public" hint="Returns an attribute value of this element. No matter the type of attribute it always returns a string. Boolean values are returned as 'true' or an empty string for false." >
 		<cfargument name="name" type="string" required="true" />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var sAttributeValue = "" />
 
@@ -165,30 +130,18 @@
 	</cffunction>
 
 	<cffunction name="isDisplayed" returntype="boolean" access="public" hint="Checks if the element is displayed. The display- and visibility-properties are used for this check." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 		<cfreturn variables.oJavaWebElement.isDisplayed() />
 	</cffunction>
 
 	<cffunction name="isEnabled" returntype="boolean" access="public" hint="Checks if the element is enabled. The disabled-attribute is used for this check, and is typically only useful for input- and textarea-elements" >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 		<cfreturn variables.oJavaWebElement.isEnabled() />
 	</cffunction>
 
 	<cffunction name="isSelected" returntype="boolean" access="public" hint="Checks if the element is selected or not. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag. It will just return false." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 		<cfreturn variables.oJavaWebElement.isSelected() />
 	</cffunction>
 
 	<cffunction name="selectIfNotSelected" returntype="Element" access="public" hint="Selects this element if it's de-selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfif isSelected() IS false >
 			<cfset click() />
@@ -198,9 +151,6 @@
 	</cffunction>
 
 	<cffunction name="deselectIfSelected" returntype="Element" access="public" hint="De-selects this element if it's already selected, otherwise won't do anything. This only applies to input elements such as checkboxes, radio buttons and options-elements nested inside select-tags. Will not throw errors if you use this on a non-selectable tag." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfif isSelected() >
 			<cfset click() />
@@ -213,10 +163,6 @@
 		<cfargument name="text" type="array" required="true" hint="An array with each entry being a string that will be typed into the element" />
 		<cfargument name="addToExistingText" type="boolean" required="false" default="false" hint="By default whatever text is already in the element will be cleared. Pass this as true to add to the existing text instead." />
 		<cfargument name="convertToStrings" type="boolean" required="false" default="true" hint="Use this to turn off the forced conversion all the array values from parameter 'text' to string. Selenium will throw an exception if a value in the array is NOT a string." />
-
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfif arguments.convertToStrings >
 			<cfset arguments.text = javaCast("java.lang.String[]", arguments.text) />
@@ -250,9 +196,6 @@
 	</cffunction>
 
 	<cffunction name="click" returntype="Element" access="public" hint="Click this element. There are some preconditions for the element to be clicked: it must be visible and it must have a height and width greater than 0." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cftry>
 			<cfset variables.oJavaWebElement.click() />
@@ -270,12 +213,9 @@
 	</cffunction>
 
 	<cffunction name="clickUsingEnter" returntype="Element" access="public" hint="An alternative to click(), which uses the keyboard to press 'Enter' on the element instead of clicking with the mouse." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cftry>
-			<cfset variables.oJavaWebElement.sendKeys( [variables.oWrappedBrowser.getJavaloader().create("org.openqa.selenium.Keys").ENTER] ) />
+			<cfset variables.oJavaWebElement.sendKeys( [variables.oWrappedBrowser.getSeleniumFactory().get("org.openqa.selenium.Keys").ENTER] ) />
 
 			<cfcatch>
 				<cfif cfcatch.type IS "org.openqa.selenium.ElementNotVisibleException" OR (cfcatch.type IS "org.openqa.selenium.WebDriverException" AND findNoCase("is not clickable at point (", cfcatch.message) GT 0) >
@@ -290,9 +230,6 @@
 	</cffunction>
 
 	<cffunction name="clickUsingJS" returntype="Element" access="public" hint="An alternative to click(), which uses Javascript to invoke the click()-method on the element instead of clicking with the mouse." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cftry>
 			<cfset variables.oWrappedBrowser.runJavascript(script="arguments[0].click()", parameters=[variables.oJavaWebElement]) />
@@ -310,10 +247,6 @@
 	</cffunction>
 
 	<cffunction name="clearText" returntype="Element" access="public" hint="Clear this element's value, if this element is a text element (input and textarea)" >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset variables.oJavaWebElement.clear() />
 		<cfreturn this />
 	</cffunction>
@@ -337,10 +270,6 @@
 		<cfargument name="locateHiddenElements" type="boolean" required="false" default="#variables.oWrappedBrowser.getFetchHiddenElements()#" hint="Use this to determine whether to return only elements that are considered visible or not." />
 		<cfargument name="multiple" type="boolean" required="false" default="false" hint="Whether you want to fetch a single element or multiple. Keep in mind that this will return an array, even an empty one, if no elements are found." />
 
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
-
 		<cfset var stGetElementsArguments = arguments />
 		<cfset stGetElementsArguments.searchContext = getJavaWebElement() />
 
@@ -348,9 +277,6 @@
 	</cffunction>
 
 	<cffunction name="getParentElement" returntype="Element" access="public" hint="Returns the parent element of this element" >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = "return arguments[0].parentElement",
@@ -363,9 +289,7 @@
 	</cffunction>
 
 	<cffunction name="getPreviousSiblingElement" returntype="Element" access="public" hint="Returns the previous (upper) sibling/neighbour-element of this element" >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
+		
 
 		<cfset var oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = "return arguments[0].previousElementSibling",
@@ -387,9 +311,6 @@
 	</cffunction>
 
 	<cffunction name="getNextSiblingElement" returntype="Element" access="public" hint="Returns the next (lower) sibling/neighbour-element of this element" >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = "return arguments[0].nextElementSibling",
@@ -411,9 +332,6 @@
 	</cffunction>
 
 	<cffunction name="getChildElements" returntype="array" access="public" hint="Returns an array of all elements that are direct children of this element." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = "return arguments[0].children",
@@ -431,9 +349,6 @@
 	</cffunction>
 
 	<cffunction name="getFirstChildElement" returntype="Element" access="public" hint="Returns the FIRST element that is a direct child of this element." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = "return arguments[0].firstElementChild",
@@ -456,9 +371,6 @@
 	</cffunction>
 
 	<cffunction name="getLastChildElement" returntype="Element" access="public" hint="Returns the LAST element that is a direct child of this element." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var oLocator = variables.oWrappedBrowser.createLocator(
 			searchFor = "return arguments[0].lastElementChild",
@@ -480,31 +392,16 @@
 	</cffunction>
 
 	<cffunction name="scrollToAndFocusOn" returntype="Element" access="public" hint="Moves the mouse to this element which causes it to be scrolled into view" >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
-		<cfset var oActions = "" />
-
-		<cfif isObject(variables.oWrappedBrowser.getJavaloader()) >
-			<cfset oActions = variables.oWrappedBrowser.getJavaloader().create("org.openqa.selenium.interactions.Actions").init(
-				variables.oWrappedBrowser.getJavaWebDriver()
-			) />
-		<cfelse>
-			<cfset oActions = createObject("java", "org.openqa.selenium.interactions.Actions").init(
-				variables.oWrappedBrowser.getJavaWebDriver()
-			) />
-		</cfif>
-
-		<cfset oActions.moveToElement(variables.getJavaWebElement()).perform() />
+		<cfset oActions = variables.oWrappedBrowser.getSeleniumFactory().get("org.openqa.selenium.interactions.Actions").init(
+			variables.oWrappedBrowser.getJavaWebDriver()
+		)
+		.moveToElement(variables.getJavaWebElement()).perform() />
 
 		<cfreturn this />
 	</cffunction>
 
 	<cffunction name="scrollIntoView" returntype="Element" access="public" hint="Scrolls this element into view but does not focus on it. Similar in many ways to scrollToAndFocusOn(), but is a more unstable solution that uses the Y-position of the viewport and the element to determine if the element is out of view, and then executes JS to scroll to the element. Consider it an (expensive) alternative to scrollToAndFocusOn, which is the recommended method." >
-		<cfif isObject(variables.eventManager) >
-			<cfset variables.eventManager.log("Browser", getFunctionCalledName(), arguments) />
-		</cfif>
 
 		<cfset var nWindowHeight = variables.oWrappedBrowser.getJavaWebDriver().manage().window().getSize().height />
 
