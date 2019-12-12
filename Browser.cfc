@@ -452,6 +452,7 @@
 
 		<cfset oExpectedConditions = variables.seleniumFactory.get("org.openqa.selenium.support.ui.ExpectedConditions") />
 		<cfset oWebdriverWait = variables.seleniumFactory.get("org.openqa.selenium.support.ui.WebDriverWait").init(variables.oJavaWebDriver, javaCast("long", arguments.timeout)) />
+		<cfset oWebdriverWait.ignoring( variables.seleniumFactory.get("org.openqa.selenium.NoSuchElementException").getClass() ) />
 		
 		<cftry>
 			<cfset ReturnData = oWebdriverWait.until(

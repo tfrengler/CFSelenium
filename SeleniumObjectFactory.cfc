@@ -58,7 +58,7 @@
 			</cfcase>
 
 			<cfdefaultcase>
-				<cfthrow message="Error getting Selenium object" message="The creation strategy is incorrect: #variables.creationStrategy#" />
+				<cfthrow message="Error getting Selenium object" detail="The creation strategy is incorrect: #variables.creationStrategy#" />
 			</cfdefaultcase>
 		</cfswitch>
 	</cffunction>
