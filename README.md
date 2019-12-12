@@ -55,9 +55,7 @@ I was encouraged to share this framework here on GitHub by my colleagues. As it 
 
 **CREATING A BROWSER INSTANCE:**
 
-Basic usage is via the webdriver (**Browser.cfc**) which finds and returns HTML-elements (**Element.cfc**) for you.
-
-To create a browser - for example Chrome running on Windows - you use WebdriverManager.cfc like this:
+Basic usage is via the webdriver (**Browser.cfc**) which finds and returns HTML-elements (**Element.cfc**) for you. But first you need a browser-instance and to create that - for example Chrome running on Windows - you use WebdriverManager.cfc like this:
 
 ```coldfusion
 <cfset Browser = WebdriverManagerInstance.createBrowser(
@@ -68,9 +66,9 @@ To create a browser - for example Chrome running on Windows - you use WebdriverM
 ) />
 ```
 
-By passing **remote** as referring to the address and host of the webdriver binary - that you'd then start manually on your machine - you get to see Chrome being opened and interacted with. This is useful if you want to eyeball your tests as they run.
+By passing **remote** as **true** with **remoteServerAddress** referring to the address of the webdriver binary you get to see Chrome being opened and interacted with. This is useful if you want to eyeball your tests as they run. __Keep in mind__ that in order to do this you have to manually start the webdriver binary, which is usually only possible on localhost. So if you want to run tests against another server the **remoteServerAddress** has to refer to a machine running the **Selenium Standalone Server**. You'll have to Google how to set that up if you're interested.
 
-Alternatively you run in pure local mode where you pass the location of the webdriver binary and then under the hood Selenium will start the webdriver - as well as the browser in headless mode - and close them down again once the test is done. In this mode you obviously don't get to see the tests running:
+Alternatively you can run in pure **local mode** where you pass the location of the webdriver binary and then under the hood Selenium will start the webdriver - as well as the browser in headless mode - and close them down again once the test is done. In this mode you obviously don't get to see the tests running. But you don't have to manage the lifecycle of the webdriver bin yourself of course:
 
 ```coldfusion
 <cfset Browser = WebdriverManagerInstance.createBrowser(
@@ -80,11 +78,33 @@ Alternatively you run in pure local mode where you pass the location of the webd
 ) />
 ```
 
+You can also make use of a **driver service**. It functions similar to the local mode example above and allows Selenium to manage the lifecycle of the webdriver binary itself. How exactly it differs to the example above - or why it's better or worse - is unclear. In any case you first create the service and then the browser, telling it to use the service. Like this:
+
+```coldfusion
+<cfset DriverService = WebdriverManager.createService(
+    browser="chrome",
+    pathToWebDriverBIN="C:\somepath\chromedriver.exe"
+) />
+
+<cfset DriverService.start() />
+
+<cfset Browser = WebdriverManager.createBrowser(
+    browser="chrome",
+    remote=true,
+    remoteServerAddress=DriverService.getUrl(),
+    platform="WINDOWS"
+) />
+```
+
+Notice that you pass the webdriver binary location to the service this time. When you don't need the service any longer you call **DriverService.stop()**
+
+**ENABLING THE FRAMEWORK TO USE THE SELENIUM JAR-FILES**
+
 I mentioned under setup that you need to make Selenium's jar-files available to the framework somehow. If you loaded them via javasettings in Application.cfc, by adding them to Lucee's load-folder, modified the loadpath etc. then you don't have to do anything more as they should be globally accessible to your entire Lucee installation.
 
 There are two other ways to make the jars available to an application: via JavaLoader or more directly by passing a reference to the jar or the folder of the jar(s) in createObject(). Both options are supported by this framework.
 
-Using JavaLoader - pass an instance of JavaLoader to createBrowser() via argument **javaLoaderReference**:
+Using JavaLoader - pass an instance of JavaLoader to **createBrowser** and/or **createService** via argument **javaLoaderReference**:
 
 ```coldfusion
 <cfset Browser = WebdriverManagerInstance.createBrowser(
@@ -95,7 +115,7 @@ Using JavaLoader - pass an instance of JavaLoader to createBrowser() via argumen
 ) />
 ```
 
-Using folder path - pass the absolute path to a folder where Selenium's jars are located to createBrowser() via argument **seleniumJarsPath**:
+Using folder path - pass the absolute path to a folder where Selenium's jars are located to **createBrowser** and/or **createService** via argument **seleniumJarsPath**:
 
 ```coldfusion
 <cfset Browser = WebdriverManagerInstance.createBrowser(
