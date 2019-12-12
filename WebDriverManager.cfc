@@ -154,8 +154,8 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfargument name="browserVersion" type="numeric" required="false" default=0 hint="The version of the browser, or pass as empty if you don't know (or care for that matter)." />
 		<cfargument name="browserArguments" type="array" required="no" default="#[]#" hint="An array of arguments specific to the browser that you want the webdriver to start with. NOTE: For the browsers that support it, you can get a noticable performance boost by disabling automatic proxy detection!" />
 		<cfargument name="pathToWebDriverBIN" type="string" required="false" default="" hint="The full path to the webdriver executable. Only required if running in local mode (remote=false)" />
-		<cfargument name="javaLoaderReference" type="any" required="false" default=#nullValue()# hint="A reference to Mark Mandel's Javaloader. If this isn't passed then all Selenium's Java-objects will be created used createObject(), and it's up to you to ensure the jars are loaded and available for use somehow" />
 		<cfargument name="loggingPreferences" type="WebdriverLogSettings" required="false" hint="An instance of WebdriverLogSettings containing the log types and their levels" />
+		<cfargument name="javaLoaderReference" type="any" required="false" default=#nullValue()# hint="A reference to Mark Mandel's Javaloader. If this isn't passed then all Selenium's Java-objects will be created used createObject(), and it's up to you to ensure the jars are loaded and available for use somehow" />
 		<cfargument name="seleniumJarsPath" type="string" required="false" default="" hint="The full path to a directory where the Selenium JAR's live. This method of loading the JARS is only supported by Lucee and not ACF. If both this and 'javaLoaderReference' is passed, the latter take precedence" />
 
 		<cfset var oBrowser = "" />
@@ -276,45 +276,35 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfreturn new Browser(argumentCollection=stBrowserArguments) />
 	</cffunction>
 
-	<!--- Untested, and likely not working anymore at this point! --->
-	<!--- <cffunction name="createService" returntype="any" access="public" hint="The main benefit of using a service over just using the webdriver is efficiency and execution time. When webdriver.quit() is invoked without a service it shuts down the browser AND exist the webdriver binary. With a service it only shuts down the browser when calling service.stop() but keeps the binary running." >
+	<cffunction name="createService" returntype="any" access="public" hint="The main benefit of using a service over just using the webdriver is efficiency in handling the browser instance(s) lifetime, particularly when executing many tests." >
 		<cfargument name="browser" type="string" required="yes" hint="Name of the browser you'd like to create a service for" />
 		<cfargument name="useAnyFreePort" type="boolean" required="false" default="false" hint="Let the service use any free port available. Will override the Port-argument if passed as true." />
 		<cfargument name="port" type="numeric" required="no" default="0" hint="The port number you want the service to start the webdriver on. Will by default use the default port for the chosen browser's webdriver." />
 		<cfargument name="pathToWebDriverBIN" type="string" required="true" hint="The full path to the webdriver executable" />
-		<cfargument name="javaLoaderReference" type="any" required="false" />
+		<cfargument name="javaLoaderReference" type="any" required="false" default=#nullValue()# hint="A reference to Mark Mandel's Javaloader. If this isn't passed then all Selenium's Java-objects will be created used createObject(), and it's up to you to ensure the jars are loaded and available for use somehow" />
+		<cfargument name="seleniumJarsPath" type="string" required="false" default="" hint="The full path to a directory where the Selenium JAR's live. This method of loading the JARS is only supported by Lucee and not ACF. If both this and 'javaLoaderReference' is passed, the latter take precedence" />
 
-		<cfreturn javacast("null", 0) />
+		<cfset var seleniumFactory = new SeleniumObjectFactory(javaLoaderReference=arguments.javaLoaderReference, jarFolder=arguments.seleniumJarsPath) />
+		<cfset var stBrowserData = variables.getBrowserData(arguments.browser) />
+		<cfset var oServiceBuilder = seleniumFactory.get("org.openqa.selenium.#lCase(arguments.browser)#.#stBrowserData.serviceJarName#$Builder") />
+		<cfset var oWebDriverService = nullValue() />
 
-		<cfset var stBrowserData = getBrowserData(arguments.browser) />
-		<cfset var oServiceBuilder = createObject("java", "java.lang.Object") />
-		<cfset var oWebDriverService = createObject("java", "java.lang.Object") />
-
-		<cfif isObject(arguments.javaLoaderReference) >
-			<cfset oServiceBuilder = oJavaLoader.create("org.openqa.selenium.#lCase(arguments.browser)#.#variables.stBrowserData.serviceJarName#$Builder") />
-		<cfelse>
-			<cfset oServiceBuilder = createObject("java", "org.openqa.selenium.#lCase(arguments.browser)#.#variables.stBrowserData.serviceJarName#$Builder") />
-		</cfif>
-
-		<cfif verifyFilePath(arguments.pathToWebDriverBIN) IS false >
+		<cfif variables.verifyFilePath(arguments.pathToWebDriverBIN) IS false >
 			<cfthrow message="Error while creating browser" detail="The path you passed in 'PathToWebDriverBIN' as '#arguments.pathToWebDriverBIN#' is an invalid file-path or the binary can't be found or read!" />
 		</cfif>
 
 		<cfif arguments.useAnyFreePort >
 			<cfset oServiceBuilder.usingAnyFreePort() />
 
-		<cfelseif arguments.Port IS NOT 0 >
+		<cfelseif arguments.Port GT 0 >
 
 			<cfif isValid("integer", arguments.port) IS false >
 				<cfthrow message="Error while creating browser" detail="Argument 'Port' must be a valid integer!" />
 			</cfif>
-			<cfif arguments.port LT 0 >
-				<cfthrow message="Error while creating browser" detail="Argument 'Port' must be greater than 0!" />
-			</cfif>
-			<cfset oServiceBuilder.usingPort( arguments.port ) />
 
+			<cfset oServiceBuilder.usingPort( arguments.port ) />
 		<cfelse>
-			<cfset oServiceBuilder.usingPort( variables.stBrowserData.defaultPort ) />
+			<cfset oServiceBuilder.usingPort( stBrowserData.defaultPort ) />
 		</cfif>
 
 		<cfset oServiceBuilder.usingDriverExecutable( createObject("java", "java.io.File").init(arguments.pathToWebDriverBIN) ) />
@@ -325,6 +315,6 @@ already running Selenium Grid on another machine, then THAT takes care of starti
 		<cfelse>
 			<cfthrow message="Error while creating browser" detail="Something we can't indentify or catch went wrong with building the webdriver service. The service builder did not return an object." />
 		</cfif>
-	</cffunction> --->
+	</cffunction>
 
 </cfcomponent>
