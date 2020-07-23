@@ -239,7 +239,7 @@
 			<cfset aElementCollection = fetchHTMLElements(argumentCollection = stFetchHTMLElementsArguments) />
 
 			<cfif arrayIsEmpty(aElementCollection) >
-				<cfthrow message="Unable to find HTML-element" detail="Locator mechanism: #arguments.locator.getLocatorMechanism()# | Search string: #arguments.locator.getLocatorString()# | Locate hidden elements: #arguments.locateHiddenElements#" />
+				<cfthrow type="ElementNotFound" message="Unable to find HTML-element" detail="Locator mechanism: #arguments.locator.getLocatorMechanism()# | Search string: #arguments.locator.getLocatorString()# | Locate hidden elements: #arguments.locateHiddenElements#" />
 			</cfif>
 
 			<cfif isInstanceOf(aElementCollection[1], "Element") IS false >
@@ -485,6 +485,10 @@
 
 		<cfset sleep(100) />
 		<cfreturn ReturnData />
+	</cffunction>
+
+	<cffunction name="wait" returntype="Wait" access="public" hint="Use this to wait for certain element conditions, such as for an element to be visible, clickable etc. This is an alternative to waitUntil() that uses custom methods, rather than wrapping Selenium's WebDriverWait and ExpectedConditions" >
+		<cfreturn new Wait(variables.seleniumFactory, variables.bUseStrictVisibilityCheck) />
 	</cffunction>
 
 </cfcomponent>
