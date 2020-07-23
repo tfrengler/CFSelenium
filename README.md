@@ -5,15 +5,19 @@ This framework aims to do the pretty much the same as teamcfadvance's CFSelenium
 
 I don't claim this is better; in fact it's approach is quite different - as this is full framework that abstracts and exposes Selenium in very specific ways to suit our company's needs.
 
+That last bit is important. This framework was never made for general purpose use, and is laser focused on the need/style of the company I worked for. Therefore it may not be the least bit useful to a lot of people, as it abstracts only the things that were useful to us, and many of the design decisions throughout the framework may appear decidedly weird at closer inspection.
+
+If nothing else I hope it serves as an insight into how one might create their own test framework built around something like Selenium. 
+
 **IMPORTANT NOTE:**
 
-I have recently switched employer and no longer use this framework professionally. As such it's likely not going to be updated anymore or at least not very frequently.
+Since making this framework I have switched employer and no longer use it professionally. As such it's likely not going to be updated anymore or at least not very frequently.
 
 **LICENSE:**
 
 MIT License
 
-Copyright (c) 2019 Thomas Grud Frengler
+Copyright (c) 2020 Thomas Grud Frengler
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -40,18 +44,24 @@ teamcfadvance's CFSelenium was sadly not in a working state at that point and wi
 
 **USAGE:**
 
-I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will not be extended according to feedback. It's public mostly for educational/curiosty reasons, so that anyone else who might want to see how Coldfusion and Selenium working together could be achieved and realized as a fully fledged framework. It's built completely towards my company's way - and mine, as the chief architect - of working and it was never meant to be easy for others to implement and use. Although easy of use was the original intention when I put it on GitHub, as time went on, it became clear that it was practically impossible to keep developing it for our use while not locking it down or restricting it for the public.
+I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will not be extended according to feedback. It's public mostly for educational/curiosty reasons, so that anyone else who might want to see how Coldfusion and Selenium working together could be achieved and realized as a fully fledged framework. It's built completely around my way of working and it was never intended to be easy for others to utilize as a general purpose test tool.
 
-**REQUIREMENTS:**
+**REQUIREMENTS/COMPATIBILITY:**
 
 * **Lucee 5+** | Our company moved from ACF to Lucee a while ago, and since then I have started making use of Lucee-only code. Apologies for any ACF-users out there.
 * Supports the use of Mark Mandel's **Javaloader**
+* Tested to work with Selenium up to version **3.141.59**. Other versions may work but not guaranteed.
 
 **SETUP:**
 
 * Download the **Java**-bindings from Selenium's website. Unzip the file, find ALL the **jar**-files and put them in some directory somewhere. 
-* Now load those into your Lucee-application somehow so that the code can access it. Either do it via Application.cfc using **javasettings.loadPaths**, via **JavaLoader** or edit Lucee's config to include / load the jar-files directly. The latter version is not recommended as conflicting classes/packages will cause Lucee to prioritize its own over Selenium's.
-* Find a way to load the CFC's from this repo. My approach previously was to "hardcode" the path (the code expected subfolder called **Components**) but you can put it anywhere you want. Either set it up via mappings in the **Application.cfc** or add mappings via **Lucee admin** or whatever takes your fancy.
+
+* Now you need a way for Lucee to access these files. There's multiple ways to do this, such as:
+	* Via Application.cfc using **javasettings.loadPaths**
+	* Via **JavaLoader** (https://github.com/markmandel/JavaLoader)
+	* Edit Lucee's config to include / load the jar-files directly or dump them into the bundle folder (lucee/tomcat/lucee-server/bundles/). The is not recommended as conflicting classes/packages will cause Lucee to prioritize its own over Selenium's or you'll get OSGI bundle conflicts. But ultimately it's up to you.
+
+* Find a way to load the CFC's from this repo. My approach previously was to "hardcode" the path (the code expected subfolder called **Components**) but now you can put it anywhere you want. Either set it up via mappings in the **Application.cfc**, add mappings via **Lucee admin** or whatever takes your fancy.
 
 **CREATING A BROWSER INSTANCE:**
 
@@ -96,7 +106,8 @@ You can also make use of a **driver service**. It functions similar to the local
 ) />
 ```
 
-Notice that you pass the webdriver binary location to the service this time. When you don't need the service any longer you call **DriverService.stop()**
+Notice that you pass the webdriver binary location to the service this time. When you don't need the service any longer you call **DriverService.stop()**.
+One advantage is that you could chose to run the driver-service on another machine, effectively having different machines for different platforms or even browsers. If that's something you find useful it might be better to have a look at the Selenium Server (GRID) instead (https://www.selenium.dev/documentation/en/grid/).
 
 **ENABLING THE FRAMEWORK TO USE THE SELENIUM JAR-FILES**
 
