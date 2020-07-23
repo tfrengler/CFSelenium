@@ -5,9 +5,13 @@ This framework aims to do the pretty much the same as teamcfadvance's CFSelenium
 
 I don't claim this is better; in fact it's approach is quite different - as this is full framework that abstracts and exposes Selenium in very specific ways to suit our company's needs.
 
+That last bit is important. This framework was never made for general purpose use, and is laser focused on the need/style of the company I worked for. Therefore it may not be the least bit useful to a lot of people, as it abstracts only the things that were useful to us, and many of the design decisions throughout the framework may appear decidedly weird at closer inspection.
+
+If nothing else I hope it serves as an insight into how one might create their own test framework built around something like Selenium. 
+
 **IMPORTANT NOTE:**
 
-I have recently switched employer and no longer use this framework professionally. As such it's likely not going to be updated anymore or at least not very frequently.
+Since making this framework I have switched employer and no longer use it professionally. As such it's likely not going to be updated anymore or at least not very frequently.
 
 **LICENSE:**
 
@@ -40,7 +44,7 @@ teamcfadvance's CFSelenium was sadly not in a working state at that point and wi
 
 **USAGE:**
 
-I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will not be extended according to feedback. It's public mostly for educational/curiosty reasons, so that anyone else who might want to see how Coldfusion and Selenium working together could be achieved and realized as a fully fledged framework. It's built completely towards my company's way - and mine, as the chief architect - of working and it was never meant to be easy for others to implement and use. Although easy of use was the original intention when I put it on GitHub, as time went on, it became clear that it was practically impossible to keep developing it for our use while not locking it down or restricting it for the public.
+I was encouraged to share this framework here on GitHub by my colleagues. As it stands the framework is provided "as is" and will not be extended according to feedback. It's public mostly for educational/curiosty reasons, so that anyone else who might want to see how Coldfusion and Selenium working together could be achieved and realized as a fully fledged framework. It's built completely around my way of working and it was never intended to be easy for others to utilize as a general purpose test tool.
 
 **REQUIREMENTS/COMPATIBILITY:**
 
@@ -102,7 +106,8 @@ You can also make use of a **driver service**. It functions similar to the local
 ) />
 ```
 
-Notice that you pass the webdriver binary location to the service this time. When you don't need the service any longer you call **DriverService.stop()**
+Notice that you pass the webdriver binary location to the service this time. When you don't need the service any longer you call **DriverService.stop()**.
+One advantage is that you could chose to run the driver-service on another machine, effectively having different machines for different platforms or even browsers. If that's something you find useful it might be better to have a look at the Selenium Server (GRID) instead (https://www.selenium.dev/documentation/en/grid/).
 
 **ENABLING THE FRAMEWORK TO USE THE SELENIUM JAR-FILES**
 
