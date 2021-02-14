@@ -1,7 +1,7 @@
 # CFSelenium (DEPRECATED)
 An opinionated Selenium framework for Coldfusion utilising the native Java-bindings
 
-**NOTE: As of Feb 2021 this repo is now deprecated. I will no longer be maintaining this (to be fair, I already hadn't in a long time**
+**NOTE: As of Feb 2021 this repo is now deprecated. I will no longer be maintaining this (to be fair, I already hadn't in a long time). Instead have a look at the follow-up: https://github.com/tfrengler/CFSelenium2**
 
 This framework aims to do the pretty much the same as teamcfadvance's CFSelenium: provide a native client library for the Selenium WebDriver that allows you to write tests, using CFML, which will drive a browser and allow you to interact with the page and elements.
 
